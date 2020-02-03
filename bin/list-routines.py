@@ -11,6 +11,25 @@ from dreamcoder.type import *
 from dreamcoder.grammar import Grammar
 from functools import reduce
 
+class RecursionDepthExceeded(Exception):
+    pass
+
+def _fix(argument):
+    def inner(body):
+        recursion_limit = [20]
+
+        def fix(x):
+            def r(z):
+                recursion_limit[0] -= 1
+                if recursion_limit[0] <= 0:
+                    raise RecursionDepthExceeded()
+                else:
+                    return fix(z)
+
+            return body(r)(x)
+        return fix(argument)
+
+    return inner
 # Here are the definitions for the primitives. They are all curried.
 def _addition(x): return lambda y: x + y
 def _and(x): return lambda y: x and y
@@ -69,6 +88,7 @@ def _group(key):
 def _gt(x): return lambda y: x > y
 def _if(c): return lambda t: lambda f: t if c else f
 def _insert(x): return lambda i: lambda xs: xs[:(i-1)] + [x] + xs[(i-1):]
+def _is_empty(xs): return len(xs) == 0
 def _is_even(x): return x % 2 == 0
 def _is_in(xs): return lambda x: x in xs
 def _is_odd(x): return x % 2 == 1
@@ -96,6 +116,7 @@ def _slice(x): return lambda y: lambda l: l[(x-1):y]
 def _splice(x): return lambda i: lambda xs: xs[:(i-1)] +  x  + xs[(i-1):]
 def _subtraction(x): return lambda y: x - y
 def _swap(i): return lambda j: lambda xs: xs[:(i-1)] + [xs[(j-1)]] + xs[i:(j-1)] + [xs[(i-1)]] + xs[j:]
+def _tail(xs): return xs[1:]
 def _take(i): return lambda xs: xs[:i]
 def _takelast(i): return lambda xs: xs[-i:]
 def _third(x): return x[2]
@@ -109,18 +130,22 @@ def model_comparison_primitives_99():
     return _model_comparison_primitives(99)
 
 def _model_comparison_primitives(max_num):
-    # lambda is assumed to be primitive
     return [Primitive(str(j), tint, j) for j in range(0,max_num+1)] + [
+        Primitive("nan", tint, math.nan),
         Primitive("true", tbool, True),
         Primitive("false", tbool, False),
         Primitive("empty", tlist(t0), []),
+        Primitive("cons", arrow(t0, tlist(t0), tlist(t0)), _cons),
         Primitive("+", arrow(tint, tint, tint), _addition),
         Primitive("-", arrow(tint, tint, tint), _subtraction),
-        Primitive("==", arrow(t0, t0, tbool), _eq),
         Primitive(">", arrow(tint, tint, tbool), _gt),
-        Primitive("cons", arrow(t0, tlist(t0), tlist(t0)), _cons),
+        Primitive("fix", arrow(t0, arrow(arrow(t0, t1), t0, t1), t1), _fix),
         Primitive("head", arrow(tlist(t0), t0), _first),
         Primitive("if", arrow(tbool, t0, t0, t0), _if),
+        Primitive("is_empty", arrow(t0, t0, tbool), _eq),
+        Primitive("is_equal", arrow(t0, t0, tbool), _eq),
+        # `lambda` is built into the representation.
+        Primitive("tail", arrow(tlist(t0), tlist(t0)), _tail),
     ]
 
 def human_scale_primitives():
@@ -149,16 +174,19 @@ def human_scale_primitives():
         Primitive("false", tbool, False),
         Primitive("filter", arrow(arrow(t0, tbool), tlist(t0), tlist(t0)), _filter),
         Primitive("filteri", arrow(arrow(tint, t0, tbool), tlist(t0), tlist(t0)), _filteri),
+        Primitive("find", arrow(arrow(t0, tbool), tlist(t0), tlist(tint)), _find),
+        Primitive("first", arrow(tlist(t0), t0), _first),
+        Primitive("fix1", arrow(t0, arrow(arrow(t0, t1), t0, t1), t1), _fix),
         Primitive("flatten", arrow(tlist(tlist(t0)), tlist(t0)), _flatten),
         Primitive("fold", arrow(arrow(t1, t0, t1), t1, tlist(t0), t1), _fold),
         Primitive("foldi", arrow(arrow(tint, t1, t0, t1), t1, tlist(t0), t1), _foldi),
         Primitive("group", arrow(arrow(t0, t1), tlist(t1), tlist(tlist(t1))), _group),
-        Primitive("first", arrow(tlist(t0), t0), _first),
-        Primitive("second", arrow(tlist(t0), t0), _second),
-        Primitive("third", arrow(tlist(t0), t0), _third),
         Primitive("if", arrow(tbool, t0, t0, t0), _if),
+        Primitive("insert", arrow(t0, tint, tlist(t0), tlist(t0)), _insert),
         Primitive("is_even", arrow(tint, tbool), _is_even),
+        Primitive("is_in", arrow(tlist(t0), t0, tbool), _is_in),
         Primitive("is_odd", arrow(tint, tbool), _is_odd),
+        # `lambda` is built into the representation.
         Primitive("last", arrow(tlist(t0), t0), _last),
         Primitive("length", arrow(tlist(t0), tint), len),
         Primitive("map", arrow(arrow(t0, t1), tlist(t0), tlist(t1)), _map),
@@ -173,20 +201,19 @@ def human_scale_primitives():
         Primitive("repeat", arrow(t0, tint, tlist(t0)), _repeat),
         Primitive("replace", arrow(tint, t0, tlist(t0), tlist(t0)), _replace),
         Primitive("reverse", arrow(tlist(t0), tlist(t0)), _reverse),
+        Primitive("second", arrow(tlist(t0), t0), _second),
         Primitive("singleton", arrow(t0, tlist(t0)), _single),
         Primitive("slice", arrow(tint, tint, tlist(t0), tlist(t0)), _slice),
         Primitive("sort", arrow(arrow(t0, tint), tlist(t0), tlist(t0)), _sort),
+        Primitive("splice", arrow(tlist(t0), tint, tlist(t0), tlist(t0)), _splice),
         Primitive("sum", arrow(tlist(tint), tint), sum),
+        Primitive("swap", arrow(tint, tint, tlist(t0), tlist(t0)), _swap),
         Primitive("take", arrow(tint, tlist(t0), tlist(t0)), _take),
         Primitive("takelast", arrow(tint, tlist(t0), tlist(t0)), _takelast),
+        Primitive("third", arrow(tlist(t0), t0), _third),
         Primitive("true", tbool, True),
         Primitive("unique", arrow(tlist(t0), tlist(t0)), _unique),
         Primitive("zip", arrow(tlist(t0), tlist(t0), tlist(tlist(t0))), _zip),
-        Primitive("is_in", arrow(tlist(t0), t0, tbool), _is_in),
-        Primitive("find", arrow(arrow(t0, tbool), tlist(t0), tlist(tint)), _find),
-        Primitive("insert", arrow(t0, tint, tlist(t0), tlist(t0)), _insert),
-        Primitive("splice", arrow(tlist(t0), tint, tlist(t0), tlist(t0)), _splice),
-        Primitive("swap", arrow(tint, tint, tlist(t0), tlist(t0)), _swap),
     ]
 
 def flip(p=0.5):
