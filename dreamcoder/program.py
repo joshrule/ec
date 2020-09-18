@@ -371,7 +371,9 @@ class Application(Program):
         yield from self.f.walk(surroundingAbstractions)
         yield from self.x.walk(surroundingAbstractions)
 
-    def size(self): return self.f.size() + self.x.size()
+    def size(self): return 1 + self.f.size() + self.x.size()
+
+    def depth(self): return 1 + max(self.f.depth(), self.x.depth())
 
     @staticmethod
     def _parse(s,n):
@@ -463,6 +465,8 @@ class Index(Program):
     def walkUncurried(self, d=0): yield d, self
 
     def size(self): return 1
+
+    def depth(self): return 0
 
     def free(self, surroundingAbstractions):
         '''Is this index a free variable, given that it has surroundingAbstractions lambda's around it?'''
@@ -569,7 +573,9 @@ class Abstraction(Program):
         yield d, self
         yield from self.body.walkUncurried(d + 1)
 
-    def size(self): return self.body.size()
+    def size(self): return 1 + self.body.size()
+
+    def depth(self): return 1 + self.body.depth()
 
     @staticmethod
     def _parse(s,n):
@@ -640,6 +646,8 @@ class Primitive(Program):
     def walkUncurried(self, d=0): yield d, self
 
     def size(self): return 1
+
+    def depth(self): return 0
 
     @staticmethod
     def _parse(s,n):
@@ -729,6 +737,8 @@ class Invented(Program):
 
     def size(self): return 1
 
+    def depth(self): return 0
+
     @staticmethod
     def _parse(s,n):
         while n < len(s) and s[n].isspace(): n += 1
@@ -792,6 +802,8 @@ class FragmentVariable(Program):
 
     def size(self): return 1
 
+    def depth(self): return 0
+
     @staticmethod
     def _parse(s,n):
         while n < len(s) and s[n].isspace(): n += 1
@@ -830,6 +842,8 @@ class Hole(Program):
     def walkUncurried(self, d=0): yield d, self
 
     def size(self): return 1
+
+    def depth(self): return 0
 
     @staticmethod
     def _parse(s,n):
