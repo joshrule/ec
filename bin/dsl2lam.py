@@ -1,7 +1,15 @@
+try:
+    import binutil  # required to import from dreamcoder modules
+except ModuleNotFoundError:
+    import bin.binutil  # alt import if called as module
 from dreamcoder.utilities import parseSExpression as parse
 from dreamcoder.program import Abstraction, Index, Application
 
 class Appl(Application):
+
+    def __init__(self, f, x):
+        super().__init__(f, x)
+        self.reduced = None
 
     def __len__(self):
         # '(' + len(f) + len(x) +')'
@@ -21,22 +29,32 @@ class Appl(Application):
                 old, new))
 
     def betaReduce(self):
+        if self.reduced is not None:
+            return self.reduced
+
         if self.f.isAbstraction:
             b = self.f.body
             v = self.x
-            return b.substitute(Index(0), v.shift(1)).shift(-1)
+            self.reduced = b.substitute(Index(0), v.shift(1)).shift(-1)
+            return self.reduced
 
         f = self.f.betaReduce()
         if f is not None:
-            return Appl(f, self.x)
+            self.reduced = Appl(f, self.x)
+            return self.reduced
 
         x = self.x.betaReduce()
         if x is not None:
-            return Appl(self.f, x)
+            self.reduced = Appl(self.f, x)
+            return self.reduced
 
         return None
 
 class Abstr(Abstraction):
+
+    def __init__(self, body):
+        super().__init__(body)
+        self.reduced = None
 
     def __len__(self):
         # '(' + 'λ' + len(body) + ')'
@@ -53,9 +71,11 @@ class Abstr(Abstraction):
         return Abstr(self.body.substitute(old, new))
 
     def betaReduce(self):
+        if self.reduced is not None: return self.reduced
         b = self.body.betaReduce()
         if b is None: return None
-        return Abstr(b)
+        self.reduced = Abstr(b)
+        return self.reduced
 
 Index.__len__ = lambda _: 1
 
@@ -207,7 +227,7 @@ primitives = {
 
     '_isnil':   '(lambda ($0 true (lambda (lambda false))))',
     'sort':     '(_Y (lambda (lambda (lambda (_isnil $0 []'
-                    '((lambda (cons $0 ($3 $2 (cut_val $0 $1)))) (_summary $1 <)))))))'
+                    '((lambda (concat (repeat $0 (count $0 $1)) ($3 $2 (cut_vals $0 $1)))) (_summary $1 < $0)))))))'
 }
 
 for prim in primitives:

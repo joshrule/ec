@@ -178,4 +178,4 @@ class TestListWithIndices(TestEncoding):
         self.make_test('(cut_val 2 (cons 2 (cons 1 (cons 2 []))))', '(range 1 2 1)')
 
     def test_sort(self):
-        pass
+        self.make_test('(sort (lambda $0) (cons 2 (cons 3 (cons 1 []))))', '(range 1 3 1)')
