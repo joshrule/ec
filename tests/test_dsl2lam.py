@@ -7,10 +7,13 @@ class TestEncoding(unittest.TestCase):
 
 
 class TestBoolean(TestEncoding):
+
     def test_not(self):
         self.make_test('(not true)', 'false')
+
     def test_if(self):
         self.make_test('(if false true (if true false true))', 'false')
+
     def test_and_or(self):
         self.make_test('(and true (or true false))', 'true')
         self.make_test('(or (and true false) (and (or true true) false))', 'false')
@@ -128,45 +131,63 @@ class TestListWithIndices(TestEncoding):
 
     def test_first(self):
         self.make_test('(first (cons 3 (cons 2 (cons 4 []))))', '3')
+
     def test_nth(self):
         self.make_test('(nth 2 (cons 3 (cons 2 (cons 4 []))))', '2')
         self.make_test('(nth 5 (range 2 7 1))', '6')
+
     def test_second(self):
         self.make_test('(second (cons 3 (cons 2 (cons 4 []))))', '2')
+
     def test_third(self):
         self.make_test('(third (cons 3 (cons 2 (cons 4 []))))', '4')
+
     def test_length(self):
         self.make_test('(length (range 2 7 1))', '6')
+
     def test_last(self):
         self.make_test('(last (range 2 7 1))', '7')
 
     def test_foldi(self):
         self.make_test('(foldi (lambda (lambda (lambda (+ $1 $2)))) 0 (repeat 1 4))', '10')
+
     def test_mapi(self):
         self.make_test('(mapi (lambda (lambda (+ $0 $1))) (repeat 2 4))', '(range 3 6 1)')
+
     def test_filteri(self):
-        self.make_test('(filteri (lambda (lambda (is_even $1))) (cons 4 (cons 3 (cons 1 (cons 2 [])))))', '(cons 3 (cons 2 []))')
+        self.make_test('(filteri (lambda (lambda (is_even $1))) (cons 4 (cons 3 (cons 1 (cons 2 [])))))',
+                       '(cons 3 (cons 2 []))')
 
     def test_insert(self):
         self.make_test('(insert 3 2 (repeat 1 4))', '(cons 1 (cons 3 (cons 1 (cons 1 (cons 1 [])))))')
+
     def test_replace(self):
         self.make_test('(replace 2 3 (repeat 1 4))', '(cons 1 (cons 3 (cons 1 (cons 1 []))))')
+
     def test_cut_idx(self):
         self.make_test('(cut_idx 2 (range 2 5 1))', '(cons 2 (cons 4 (cons 5 [])))')
+
     def test_swap(self):
         self.make_test('(swap 2 3 (range 2 5 1))', '(cons 2 (cons 4 (cons 3 (cons 5 []))))')
+
     def test_cut_slice(self):
         self.make_test('(cut_slice 3 5 (range 2 6 1))', '(cons 2 (cons 3 []))')
+
     def test_slice(self):
         self.make_test('(slice 3 5 (range 2 6 1))', '(cons 4 (cons 5 (cons 6 [])))')
+
     def test_drop(self):
         self.make_test('(drop 2 (range 2 6 1))', '(range 4 6 1)')
+
     def test_take(self):
         self.make_test('(take 2 (range 2 6 1))', '(range 2 3 1)')
+
     def test_droplast(self):
         self.make_test('(droplast 2 (range 2 6 1))', '(range 2 4 1)')
+
     def test_takelast(self):
         self.make_test('(takelast 2 (range 2 6 1))', '(range 5 6 1)')
+
     def test_splice(self):
         self.make_test('(splice (cons 2 (cons 1 [])) 2 (cons 3 (cons 4 (cons 5 []))))',
                        '(cons 3 (cons 2 (cons 1 (cons 4 (cons 5 [])))))')
@@ -174,6 +195,7 @@ class TestListWithIndices(TestEncoding):
 
     def test_find(self):
         self.make_test('(find (lambda (< 3 $0)) (range 2 6 1))', '(range 3 5 1)')
+
     def test_cut_val(self):
         self.make_test('(cut_val 2 (cons 2 (cons 1 (cons 2 []))))', '(range 1 2 1)')
 

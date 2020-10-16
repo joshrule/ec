@@ -5,6 +5,9 @@ except ModuleNotFoundError:
 from dreamcoder.utilities import parseSExpression as parse
 from dreamcoder.program import Abstraction, Index, Application
 
+# classes Appl, Abstr, Index modified from the parent class to implement normal
+# order reduction and len()
+
 class Appl(Application):
 
     def __init__(self, f, x):
@@ -79,7 +82,10 @@ class Abstr(Abstraction):
 
 Index.__len__ = lambda _: 1
 
+
 class Min:
+    '''Keeps track of the value with minimum key seen so far.'''
+
     def __init__(self, key=None, val=None):
         self.key, self.val = key, val
 
@@ -89,24 +95,20 @@ class Min:
 
 
 def encode_num(m):
+    '''Return Church encoding of m.'''
     if m == 0:
         return Abstr(Abstr(Index(0)))
     return Abstr(Abstr(                 # lambda f, x:
         Appl(Index(1),                       # (f ((n-1) f x))
              Appl(Appl(encode_num(m - 1), Index(1)), Index(0)))))
 
-def left_associate(expr):
-    if type(expr) is not list:
-        return expr
-    elif len(expr) == 2:
-        return [left_associate(expr[0]), left_associate(expr[1])]
-    else:
-        return [left_associate(expr[:-1]), left_associate(expr[-1])]
-
 
 encoding = {}
 
 def translate(expr):
+    '''Translates a left-associated list representing an S-expression into a
+    lambda calculus term.'''
+
     if type(expr) is str:
         if expr in encoding:
             return encoding[expr]
@@ -115,17 +117,28 @@ def translate(expr):
         elif expr.isdecimal():
             return encode_num(int(expr))
         else:
-            raise Exception('unknown primitive ' + expr)
+            raise NameError('unknown primitive ' + expr)
     else:
         if expr[0] == 'lambda':
             return Abstr(translate(expr[1]))
         else:
             return Appl(translate(expr[0]), translate(expr[1]))
 
+def left_associate(expr):
+    '''Left-associates a nested list representing an S-expression.'''
+    if type(expr) is not list:
+        return expr
+    elif len(expr) == 2:
+        return [left_associate(expr[0]), left_associate(expr[1])]
+    else:
+        return [left_associate(expr[:-1]), left_associate(expr[-1])]
+
 def make_program(expr):
     return translate(left_associate(parse(expr)))
 
 def beta_normal_form(term, keepmin=False):
+    '''Repeatedly beta-reduces a term, optionally keeping track of the shortest
+    intermediate reduced form of the term.'''
     minform = Min() if keepmin else None
     while True:
         if keepmin:
@@ -135,6 +148,9 @@ def beta_normal_form(term, keepmin=False):
             return term, minform
         term = t
 
+
+# primitives that start with _ are not used in HL, and are only used here as
+# components of more complex primitives
 primitives = {
     # booleans
     'true':     '(lambda (lambda $1))',
@@ -153,6 +169,7 @@ primitives = {
     '_Y':       '(lambda ((lambda ($1 ($0 $0))) (lambda ($1 ($0 $0)))))',
     '_iszero':  '(lambda ($0 (lambda false) true))',
 
+    # division taken from the Wikipedia page
     '_div':     '(lambda (lambda (lambda (lambda (lambda ((lambda (_iszero $0 $1 ($2 ($5 $0 $3 $2 $1)))) (- $3 $2)))))))',
     '/':        '(lambda (_Y _div (lambda (lambda ($1 ($2 $1 $0))))))',
 
@@ -168,6 +185,7 @@ primitives = {
     'is_odd':   '(lambda (not (is_even $0)))',
 
     # lists
+    # lists are Scott-encoded for ease of pattern-matching recursion
     '[]':      '(lambda (lambda $1))',
     'cons':     '(lambda (lambda (lambda (lambda ($0 $3 $2)))))',
     'singleton':  '(lambda (cons $0 []))',
@@ -186,8 +204,8 @@ primitives = {
     'length':   '(fold (lambda (lambda (+ 1 $1))) 0)',
     'last':     '(lambda (nth (length $0) $0))',
 
-    'append':   '(lambda (lambda (fold (lambda (lambda (cons $0 $1))) (singleton $0) $1)))',
     'concat':   '(lambda (lambda (fold (lambda (lambda (cons $0 $1))) $0 $1)))',
+    'append':   '(lambda (lambda (concat $1 (singleton $0))))',
     'count':    '(lambda (lambda (length (filter (== $1) $0))))',
     'cut_vals': '(lambda (filter (lambda (not (== $1 $0)))))',
     'is_in':    '(lambda (lambda (not (_iszero (count $0 $1)))))',
@@ -202,7 +220,11 @@ primitives = {
 
     'range':    '(_Y (lambda (lambda (lambda (lambda ((< $1 $2) [] (cons $2 ($3 (+ $2 $0) $1 $0))))))))',
     'repeat':   '(lambda (lambda (map (lambda $2) (range 1 $0 1))))',
+
+    # zips a list with the list [1, 2, ..., len]. used in most primitives that
+    # have anything to do with indices
     '_zipi':    '(lambda (zip (range 1 (length $0) 1) $0))',
+
     'foldi':    '(lambda (lambda (lambda (fold (lambda (lambda ($4 (first $0) $1 (second $0)))) $1 (_zipi $0)))))',
     'mapi':     '(lambda (lambda (map (lambda ($2 (first $0) (second $0))) (_zipi $0))))',
     'filteri':  '(lambda (lambda (map second (filter (lambda ($2 (first $0) (second $0))) (_zipi $0)))))',
