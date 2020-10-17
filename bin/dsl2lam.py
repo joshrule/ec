@@ -2,11 +2,14 @@ try:
     import binutil  # required to import from dreamcoder modules
 except ModuleNotFoundError:
     import bin.binutil  # alt import if called as module
+import csv
 from dreamcoder.utilities import parseSExpression as parse
 from dreamcoder.program import Abstraction, Index, Application
 
-# classes Appl, Abstr, Index modified from the parent class to implement normal
-# order reduction and len()
+# classes Appl, Abstr, Index modified from the parent class to implement:
+#  * normal order reduction
+#  * len(). the straightforward approach runs into recursion depth limit, so
+#    we use generators and compute the sum only at the top level len()
 
 class Appl(Application):
 
@@ -14,9 +17,14 @@ class Appl(Application):
         super().__init__(f, x)
         self.reduced = None
 
-    def __len__(self):
+    def len_gen(self):
         # '(' + len(f) + len(x) +')'
-        return 2 + len(self.f) + len(self.x)
+        yield 2
+        yield from self.f.len_gen()
+        yield from self.x.len_gen()
+
+    def __len__(self):
+        return sum(self.len_gen())
 
     def shift(self, offset, depth=0):
         return Appl(self.f.shift(offset, depth),
@@ -59,9 +67,13 @@ class Abstr(Abstraction):
         super().__init__(body)
         self.reduced = None
 
-    def __len__(self):
+    def len_gen(self):
         # '(' + 'λ' + len(body) + ')'
-        return 3 + len(self.body)
+        yield 3
+        yield from self.body.len_gen()
+
+    def __len__(self):
+        return sum(self.len_gen())
 
     def shift(self, offset, depth=0):
         return Abstr(self.body.shift(offset, depth + 1))
@@ -80,6 +92,9 @@ class Abstr(Abstraction):
         self.reduced = Abstr(b)
         return self.reduced
 
+def index_len_gen(self):
+    yield 1
+Index.len_gen = index_len_gen
 Index.__len__ = lambda _: 1
 
 
@@ -94,13 +109,15 @@ class Min:
             self.key, self.val = newkey, newval
 
 
+def _encode_num(m, f, x):
+    enc = x
+    while m > 0:
+        enc = Appl(f, enc)
+        m -= 1
+    return enc
 def encode_num(m):
     '''Return Church encoding of m.'''
-    if m == 0:
-        return Abstr(Abstr(Index(0)))
-    return Abstr(Abstr(                 # lambda f, x:
-        Appl(Index(1),                       # (f ((n-1) f x))
-             Appl(Appl(encode_num(m - 1), Index(1)), Index(0)))))
+    return Abstr(Abstr(_encode_num(m, Index(1), Index(0))))
 
 
 encoding = {}
@@ -136,17 +153,19 @@ def left_associate(expr):
 def make_program(expr):
     return translate(left_associate(parse(expr)))
 
-def beta_normal_form(term, keepmin=False):
+def beta_normal_form(term, keepmin=False, maxreds=None):
     '''Repeatedly beta-reduces a term, optionally keeping track of the shortest
-    intermediate reduced form of the term.'''
-    minform = Min() if keepmin else None
-    while True:
-        if keepmin:
-            minform.update(len(term), term)
-        t = term.betaReduce()
-        if t is None:
-            return term, minform
-        term = t
+    intermediate reduced form of the term, optionally capping the number of
+    reductions.'''
+    t = term
+    minform = Min()
+    i = 0
+    while (term is not None) and ((maxreds is None) or (i < maxreds)):
+        t = term
+        if keepmin: minform.update(len(term), term)
+        term = term.betaReduce()
+        i += 1
+    return t, minform
 
 
 # primitives that start with _ are not used in HL, and are only used here as
@@ -186,7 +205,8 @@ primitives = {
 
     # lists
     # lists are Scott-encoded for ease of pattern-matching recursion
-    '[]':      '(lambda (lambda $1))',
+    '[]':       '(lambda (lambda $1))',
+    'empty':    '[]',
     'cons':     '(lambda (lambda (lambda (lambda ($0 $3 $2)))))',
     'singleton':  '(lambda (cons $0 []))',
     'fold':     '(_Y (lambda (lambda (lambda (lambda'
@@ -254,3 +274,20 @@ primitives = {
 
 for prim in primitives:
     encoding[prim] = make_program(primitives[prim])
+
+
+def encodings_csv(infile, outfile):
+    with open(infile, 'r', newline='') as inf, open(outfile, 'w', newline='') as outf:
+        reader = csv.DictReader(inf, quotechar='"')
+        writer = csv.DictWriter(outf, ['id', 'purpose', 'program', 'encoding', 'encoding_length', 'min_encoding_length'])
+        writer.writeheader()
+        for row in reader:
+            enc = make_program(row['program'])
+            writer.writerow({
+                'id': row['id'],
+                'purpose': row['purpose'],
+                'program': row['program'],
+                'encoding': enc,
+                'encoding_length': len(enc),
+                'min_encoding_length': beta_normal_form(enc, keepmin=True, maxreds=500)[1].key
+            })
