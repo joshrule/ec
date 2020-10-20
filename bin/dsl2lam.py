@@ -204,7 +204,7 @@ primitives = {
     'is_odd':   '(lambda (not (is_even $0)))',
 
     # lists
-    # lists are Scott-encoded for ease of pattern-matching recursion
+    # Scott-encoded for ease of pattern-matching recursion
     '[]':       '(lambda (lambda $1))',
     'empty':    '[]',
     'cons':     '(lambda (lambda (lambda (lambda ($0 $3 $2)))))',
@@ -229,7 +229,7 @@ primitives = {
     'count':    '(lambda (lambda (length (filter (== $1) $0))))',
     'cut_vals': '(lambda (filter (lambda (not (== $1 $0)))))',
     'is_in':    '(lambda (lambda (not (_iszero (count $0 $1)))))',
-    'flatten':  '(fold concat [])',
+    'flatten':  '(fold (lambda (lambda (concat $0 $1))) [])',
     '_summary': '(lambda (lambda (lambda (fold (lambda (lambda ($3 ($4 $0) ($4 $1) $0 $1))) (first $0) $0))))',
     'max':      '(_summary (lambda $0) >)',
     'min':      '(_summary (lambda $0) <)',
@@ -238,12 +238,12 @@ primitives = {
     'sum':      '(fold + 0)',
     'unique':   '(lambda (reverse (fold (lambda (lambda (lambda ($2 (is_in $0 $1 $0 (cons $1 $0)))))) (lambda $0) $0 [])))',
 
-    'range':    '(_Y (lambda (lambda (lambda (lambda ((< $1 $2) [] (cons $2 ($3 (+ $2 $0) $1 $0))))))))',
-    'repeat':   '(lambda (lambda (map (lambda $2) (range 1 $0 1))))',
+    'range':    '(_Y (lambda (lambda (lambda (lambda ((< $0 $2) [] (cons $2 ($3 (+ $2 $1) $1 $0))))))))',
+    'repeat':   '(lambda (lambda (map (lambda $2) (range 1 1 $0))))',
 
     # zips a list with the list [1, 2, ..., len]. used in most primitives that
     # have anything to do with indices
-    '_zipi':    '(lambda (zip (range 1 (length $0) 1) $0))',
+    '_zipi':    '(lambda (zip (range 1 1 (length $0)) $0))',
 
     'foldi':    '(lambda (lambda (lambda (fold (lambda (lambda ($4 (first $0) $1 (second $0)))) $1 (_zipi $0)))))',
     'mapi':     '(lambda (lambda (map (lambda ($2 (first $0) (second $0))) (_zipi $0))))',
