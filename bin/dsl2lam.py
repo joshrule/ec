@@ -209,10 +209,14 @@ primitives = {
     'empty':    '[]',
     'cons':     '(lambda (lambda (lambda (lambda ($0 $3 $2)))))',
     'singleton':  '(lambda (cons $0 []))',
-    'fold':     '(_Y (lambda (lambda (lambda (lambda'
+
+    # foldr is useful for other primitives but concepts use foldl
+    '_foldr':     '(_Y (lambda (lambda (lambda (lambda'
                     '($0 $1 (lambda (lambda ($4 ($5 $4 $3 $0) $1)))))))))',
-    'map':      '(lambda (fold (lambda (lambda (cons ($2 $0) $1))) []))',
-    'filter':   '(lambda (fold (lambda (lambda (($2 $0) (cons $0 $1) $1))) []))',
+    'fold':     '(_Y (lambda (lambda (lambda (lambda'
+                    '($0 $1 (lambda (lambda ($5 $4 ($4 $3 $1) $0)))))))))',
+    'map':      '(lambda (_foldr (lambda (lambda (cons ($2 $0) $1))) []))',
+    'filter':   '(lambda (_foldr (lambda (lambda (($2 $0) (cons $0 $1) $1))) []))',
     'zip':      '(_Y (lambda (lambda (lambda ($1 [] (lambda (lambda ($2 []'
                     '(lambda (lambda (cons (cons $3 (cons $1 [])) ($6 $2 $0))))))))))))',
 
@@ -221,22 +225,22 @@ primitives = {
     'nth':      '(_Y (lambda (lambda (lambda ((== $1 1) (first $0) ($2 (_pred $1) (_tail $0)))))))',
     'second':   '(nth 2)',
     'third':    '(nth 3)',
-    'length':   '(fold (lambda (lambda (+ 1 $1))) 0)',
+    'length':   '(_foldr (lambda (lambda (+ 1 $1))) 0)',
     'last':     '(lambda (nth (length $0) $0))',
 
-    'concat':   '(lambda (lambda (fold (lambda (lambda (cons $0 $1))) $0 $1)))',
+    'concat':   '(lambda (lambda (_foldr (lambda (lambda (cons $0 $1))) $0 $1)))',
     'append':   '(lambda (lambda (concat $1 (singleton $0))))',
     'count':    '(lambda (lambda (length (filter (== $1) $0))))',
     'cut_vals': '(lambda (filter (lambda (not (== $1 $0)))))',
     'is_in':    '(lambda (lambda (not (_iszero (count $0 $1)))))',
-    'flatten':  '(fold (lambda (lambda (concat $0 $1))) [])',
-    '_summary': '(lambda (lambda (lambda (fold (lambda (lambda ($3 ($4 $0) ($4 $1) $0 $1))) (first $0) $0))))',
+    'flatten':  '(_foldr (lambda (lambda (concat $0 $1))) [])',
+    '_summary': '(lambda (lambda (lambda (_foldr (lambda (lambda ($3 ($4 $0) ($4 $1) $0 $1))) (first $0) $0))))',
     'max':      '(_summary (lambda $0) >)',
     'min':      '(_summary (lambda $0) <)',
-    'product':  '(fold * 1)',
-    'reverse':  '(lambda (fold (lambda (lambda (lambda ($2 (cons $1 $0))))) (lambda $0) $0 []))',
-    'sum':      '(fold + 0)',
-    'unique':   '(lambda (reverse (fold (lambda (lambda (lambda ($2 (is_in $0 $1 $0 (cons $1 $0)))))) (lambda $0) $0 [])))',
+    'product':  '(_foldr * 1)',
+    'reverse':  '(fold (lambda (lambda (cons $0 $1))) [])',
+    'sum':      '(_foldr + 0)',
+    'unique':   '(lambda (reverse (fold (lambda (lambda (is_in $1 $0 $1 (cons $0 $1)))) [] $0)))',
 
     'range':    '(_Y (lambda (lambda (lambda (lambda ((< $0 $2) [] (cons $2 ($3 (+ $2 $1) $1 $0))))))))',
     'repeat':   '(lambda (lambda (map (lambda $2) (range 1 1 $0))))',
@@ -245,24 +249,25 @@ primitives = {
     # have anything to do with indices
     '_zipi':    '(lambda (zip (range 1 1 (length $0)) $0))',
 
+    '_foldri':    '(lambda (lambda (lambda (_foldr (lambda (lambda ($4 (first $0) $1 (second $0)))) $1 (_zipi $0)))))',
     'foldi':    '(lambda (lambda (lambda (fold (lambda (lambda ($4 (first $0) $1 (second $0)))) $1 (_zipi $0)))))',
     'mapi':     '(lambda (lambda (map (lambda ($2 (first $0) (second $0))) (_zipi $0))))',
     'filteri':  '(lambda (lambda (map second (filter (lambda ($2 (first $0) (second $0))) (_zipi $0)))))',
 
-    'insert':   '(lambda (lambda (foldi (lambda (lambda (lambda (== $2 $3 (cons $4 (cons $0 $1)) (cons $0 $1))))) [])))',
-    'replace':  '(lambda (lambda (foldi (lambda (lambda (lambda (== $2 $4 (cons $3 $1) (cons $0 $1))))) [])))',
-    'cut_idx':  '(lambda (foldi (lambda (lambda (lambda (== $2 $3 $1 (cons $0 $1))))) []))',
-    'swap':     '(lambda (lambda (lambda (foldi (lambda (lambda (lambda'
+    'insert':   '(lambda (lambda (_foldri (lambda (lambda (lambda (== $2 $3 (cons $4 (cons $0 $1)) (cons $0 $1))))) [])))',
+    'replace':  '(lambda (lambda (_foldri (lambda (lambda (lambda (== $2 $4 (cons $3 $1) (cons $0 $1))))) [])))',
+    'cut_idx':  '(lambda (_foldri (lambda (lambda (lambda (== $2 $3 $1 (cons $0 $1))))) []))',
+    'swap':     '(lambda (lambda (lambda (_foldri (lambda (lambda (lambda'
                     '(== $2 $5 (cons (nth $4 $3) $1) (== $2 $4 (cons (nth $5 $3) $1) (cons $0 $1)))))) [] $0))))',
-    'cut_slice': '(lambda (lambda (foldi (lambda (lambda (lambda (_<=> $4 $3 $2 $1 (cons $0 $1))))) [])))',
-    'slice':    '(lambda (lambda (foldi (lambda (lambda (lambda (_<=> $4 $3 $2 (cons $0 $1) $1)))) [])))',
+    'cut_slice': '(lambda (lambda (_foldri (lambda (lambda (lambda (_<=> $4 $3 $2 $1 (cons $0 $1))))) [])))',
+    'slice':    '(lambda (lambda (_foldri (lambda (lambda (lambda (_<=> $4 $3 $2 (cons $0 $1) $1)))) [])))',
     'drop':     '(lambda (filteri (lambda (lambda (> $1 $2)))))',
     'take':     '(lambda (filteri (lambda (lambda (_<= $1 $2)))))',
     'droplast': '(lambda (lambda (take (- (length $0) $1) $0)))',
     'takelast': '(lambda (lambda (drop (- (length $0) $1) $0)))',
     'splice':   '(lambda (lambda (lambda (concat (concat (take (_pred $1) $0) $2) (drop (_pred $1) $0)))))',
 
-    'find':     '(lambda (foldi (lambda (lambda (lambda ($3 $0 (cons $2 $1) $1)))) []))',
+    'find':     '(lambda (_foldri (lambda (lambda (lambda ($3 $0 (cons $2 $1) $1)))) []))',
     'cut_val':  '(lambda (lambda (cut_idx (first (find (== $1) $0)) $0)))',
 
     'group':    '(lambda (lambda (map (lambda (filter (lambda (== $1 ($3 $0))) $1)) (unique (map $1 $0)))))',
