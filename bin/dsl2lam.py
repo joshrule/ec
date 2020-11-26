@@ -2,7 +2,6 @@ try:
     import binutil  # required to import from dreamcoder modules
 except ModuleNotFoundError:
     import bin.binutil  # alt import if called as module
-import csv
 from dreamcoder.utilities import parseSExpression as parse
 from dreamcoder.program import Abstraction, Index, Application
 
@@ -279,20 +278,3 @@ primitives = {
 
 for prim in primitives:
     encoding[prim] = make_program(primitives[prim])
-
-
-def encodings_csv(infile, outfile):
-    with open(infile, 'r', newline='') as inf, open(outfile, 'w', newline='') as outf:
-        reader = csv.DictReader(inf, quotechar='"')
-        writer = csv.DictWriter(outf, ['id', 'purpose', 'program', 'encoding', 'encoding_length', 'min_encoding_length'])
-        writer.writeheader()
-        for row in reader:
-            enc = make_program(row['program'])
-            writer.writerow({
-                'id': row['id'],
-                'purpose': row['purpose'],
-                'program': row['program'],
-                'encoding': enc,
-                'encoding_length': len(enc),
-                'min_encoding_length': beta_normal_form(enc, keepmin=True, maxreds=500)[1].key
-            })
