@@ -210,13 +210,13 @@ primitives = {
     'singleton':  '(lambda (cons $0 []))',
 
     # foldr is useful for other primitives but concepts use foldl
-    '_foldr':     '(_Y (lambda (lambda (lambda (lambda'
+    '_foldr':   '(_Y (lambda (lambda (lambda (lambda '
                     '($0 $1 (lambda (lambda ($4 ($5 $4 $3 $0) $1)))))))))',
-    'fold':     '(_Y (lambda (lambda (lambda (lambda'
+    'fold':     '(_Y (lambda (lambda (lambda (lambda '
                     '($0 $1 (lambda (lambda ($5 $4 ($4 $3 $1) $0)))))))))',
     'map':      '(lambda (_foldr (lambda (lambda (cons ($2 $0) $1))) []))',
     'filter':   '(lambda (_foldr (lambda (lambda (($2 $0) (cons $0 $1) $1))) []))',
-    'zip':      '(_Y (lambda (lambda (lambda ($1 [] (lambda (lambda ($2 []'
+    'zip':      '(_Y (lambda (lambda (lambda ($1 [] (lambda (lambda ($2 [] '
                     '(lambda (lambda (cons (cons $3 (cons $1 [])) ($6 $2 $0))))))))))))',
 
     'first':    '(lambda ($0 false (lambda (lambda $1))))',
@@ -248,7 +248,7 @@ primitives = {
     # have anything to do with indices
     '_zipi':    '(lambda (zip (range 1 1 (length $0)) $0))',
 
-    '_foldri':    '(lambda (lambda (lambda (_foldr (lambda (lambda ($4 (first $0) $1 (second $0)))) $1 (_zipi $0)))))',
+    '_foldri':  '(lambda (lambda (lambda (_foldr (lambda (lambda ($4 (first $0) $1 (second $0)))) $1 (_zipi $0)))))',
     'foldi':    '(lambda (lambda (lambda (fold (lambda (lambda ($4 (first $0) $1 (second $0)))) $1 (_zipi $0)))))',
     'mapi':     '(lambda (lambda (map (lambda ($2 (first $0) (second $0))) (_zipi $0))))',
     'filteri':  '(lambda (lambda (map second (filter (lambda ($2 (first $0) (second $0))) (_zipi $0)))))',
@@ -278,3 +278,111 @@ primitives = {
 
 for prim in primitives:
     encoding[prim] = make_program(primitives[prim])
+
+alt_defns = {
+    'and': [
+        '(lambda (lambda (if $1 (if $0 true false) false)))',
+        '(lambda (lambda (if $0 (if $1 true false) false)))'
+    ],
+    'or': [
+        '(lambda (lambda (if $1 true (if $0 true false))))',
+        '(lambda (lambda (if $0 true (if $1 true false))))'
+    ],
+
+    '_Y': [
+        '(lambda ((lambda ($0 $0)) (lambda ($1 ($0 $0)))))',
+        '((lambda (lambda ($1 $0 $1))) (lambda (lambda ($1 ($0 $1 $0)))))',
+        '((lambda (lambda ($0 ($1 $1 $0)))) (lambda (lambda ($0 ($1 $1 $0)))))',
+        '((lambda ($0 $0)) (lambda (lambda ($0 ($1 $1 $0)))))'
+    ],
+
+    '==': ['(_Y (lambda (lambda (lambda (_iszero $1 (_iszero $0 true false) (_iszero $0 false '
+        '($2 (_pred $1) (_pred $0))))))))'],
+
+    'is_odd': ['(lambda (is_even (+ 1 $0)))'],
+
+    'second': ['(lambda (first (_tail $0)))'],
+    'third': ['(lambda (first (_tail (_tail $0))))'],
+    'nth': ['(lambda (lambda (first ((_pred $1) _tail $0))))'],
+    'repeat': [
+        '(_Y (lambda (lambda (lambda (_iszero $0 [] (cons $1 ($2 $1 (_pred $0))))))))',
+        '(lambda (lambda ($0 (cons $1) [])))'
+    ],
+
+    #'map':      ['(lambda (fold (lambda (lambda (append $1 ($2 $0)))) []))'],
+    #'filter':   ['(lambda (fold (lambda (lambda (($2 $0) (append $1 $0) $1))) []))'],
+    #'length':   ['(fold (lambda (lambda (+ 1 $1))) 0)'],
+    #'flatten':  ['(fold (lambda (lambda (concat $1 $0))) [])'],
+    #'_summary': ['(lambda (lambda (lambda (fold (lambda (lambda ($3 ($4 $0) ($4 $1) $0 $1))) (first $0) $0))))'],
+    #'product':  ['(fold * 1)'],
+    #'reverse':  ['(_foldr (lambda (lambda (append $1 $0))) [])'],
+    #'sum':      ['(fold + 0)'],
+    #'unique':   ['(lambda (fold (lambda (lambda (is_in $1 $0 $1 (append $1 $0)))) [] $0))'],
+
+    '_<=': [
+        '(lambda (lambda (_iszero (- $1 $0))))',
+        '(lambda (lambda (_>= $0 $1)))',
+        '(lambda (lambda (< $1 (+1 $0))))',
+        '(lambda (lambda (> (+1 $0) $1)))',
+        '(lambda (lambda (not (< $0 $1))))',
+        '(lambda (lambda (not (> $1 $0))))'
+    ],
+    '_>=': [
+        '(lambda (lambda (_iszero (- $0 $1))))',
+        '(lambda (lambda (_<= $0 $1)))',
+        '(lambda (lambda (> $1 (+1 $0))))',
+        '(lambda (lambda (< (+1 $0) $1)))',
+        '(lambda (lambda (not (< $1 $0))))',
+        '(lambda (lambda (not (> $0 $1))))'
+    ],
+    '<': [
+        '(lambda (lambda (_iszero (- (+ 1 $1) $0))))',
+        '(lambda (lambda (_<= (+ 1 $1) $0)))',
+        '(lambda (lambda (_>= $0 (+ 1 $1))))',
+        '(lambda (lambda (not (_<= $0 $1))))',
+        '(lambda (lambda (not (_>= $1 $0))))',
+        '(lambda (lambda (> $0 $1)))'
+    ],
+    '>': [
+        '(lambda (lambda (_iszero (- (+ 1 $0) $1))))',
+        '(lambda (lambda (_>= (+ 1 $1) $0)))',
+        '(lambda (lambda (_<= $0 (+ 1 $1))))',
+        '(lambda (lambda (not (_>= $0 $1))))',
+        '(lambda (lambda (not (_<= $1 $0))))',
+        '(lambda (lambda (< $0 $1)))'
+    ],
+
+    'insert': [
+        '(lambda (lambda (lambda (concat (concat (take (_pred $1) $0) (singleton $2)) (drop (_pred $1) $0)))))',
+        '(lambda (lambda (lambda (concat (append (take (_pred $1) $0) $2) (drop (_pred $1) $0)))))',
+        '(lambda (lambda (lambda (concat (take (_pred $1) $0) (cons $2 (drop (_pred $1) $0))))))'
+    ],
+    'replace': [
+        '(lambda (lambda (lambda (concat (concat (take (_pred $2) $0) (singleton $1)) (drop $2 $0)))))',
+        '(lambda (lambda (lambda (concat (append (take (_pred $2) $0) $1) (drop $2 $0)))))',
+        '(lambda (lambda (lambda (concat (take (_pred $2) $0) (cons $1 (drop $2 $0))))))'
+    ],
+    'cut_idx': ['(lambda (lambda (concat (take (_pred $1) $0) (drop $1 $0))))'],
+    'swap': [
+        '(lambda (lambda (lambda (concat (concat (concat (concat '
+            '(take (_pred $2) $0) (singleton (nth $1 $0))) (drop $2 (take (_pred $1) $0))) (singleton (nth $2 $0))) (drop $1 $0)))))',
+        '(lambda (lambda (lambda (concat (append (concat (append '
+            '(take (_pred $2) $0) (nth $1 $0)) (drop $2 (take (_pred $1) $0))) (nth $2 $0)) (drop $1 $0)))))',
+        '(lambda (lambda (lambda (concat (concat '
+            '(take (_pred $2) $0) (cons (nth $1 $0) (drop $2 (take (_pred $1) $0)))) (cons (nth $2 $0) (drop $1 $0))))))'
+    ],
+    'cut_slice': ['(lambda (lambda (lambda (concat (take (_pred $2) $0) (drop $1 $0)))))'],
+    'slice': ['(lambda (lambda (lambda (drop (_pred $2) (take $1 $0)))))'],
+    'drop': [
+        '(lambda (lambda ($1 _tail $0)))',
+        '(_Y (lambda (lambda (lambda (_iszero $1 $0 ($2 (_pred $1) (_tail $0)))))))'
+    ],
+    'take': ['(_Y (lambda (lambda (lambda (_iszero $1 [] (cons (first $0) ($2 (_pred $1) (_tail $0))))))))'],
+    'droplast': ['(_Y (lambda (lambda (lambda (== (length $0) $1 [] (cons (first $0) ($2 (+ 1 $1) (_tail $0))))))))'],
+    'takelast': ['(lambda (lambda ((- (length $0) $1) _tail $0)))'],
+
+    'cut_val': ['(lambda (lambda (second (fold (lambda (lambda '
+        '((first $1) (cons true (singleton (append (second $1) $0))) '
+        '(== $3 $0 (cons true (singleton (second $1))) (cons false (singleton (append (second $1) $0))))))) '
+        '(cons false (singleton [])) $0))))']
+}
