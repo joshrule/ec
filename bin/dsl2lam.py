@@ -280,15 +280,6 @@ for prim in primitives:
     encoding[prim] = make_program(primitives[prim])
 
 alt_defns = {
-    'and': [
-        '(lambda (lambda (if $1 (if $0 true false) false)))',
-        '(lambda (lambda (if $0 (if $1 true false) false)))'
-    ],
-    'or': [
-        '(lambda (lambda (if $1 true (if $0 true false))))',
-        '(lambda (lambda (if $0 true (if $1 true false))))'
-    ],
-
     '_Y': [
         '(lambda ((lambda ($0 $0)) (lambda ($1 ($0 $0)))))',
         '((lambda (lambda ($1 $0 $1))) (lambda (lambda ($1 ($0 $1 $0)))))',
