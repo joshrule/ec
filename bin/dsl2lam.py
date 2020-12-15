@@ -402,7 +402,8 @@ alt_defns = {
     ],
     'cut_idx': [
         '(lambda (_foldri (lambda (lambda (lambda (== $2 $3 $1 (cons $0 $1))))) []))',
-        '(lambda (lambda (concat (take (_pred $1) $0) (drop $1 $0))))'
+        '(lambda (lambda (concat (take (_pred $1) $0) (drop $1 $0))))',
+        '(lambda (cut_slice $0 $0))'
     ],
     'swap': [
         '(lambda (lambda (lambda (_foldri (lambda (lambda (lambda '
@@ -414,20 +415,30 @@ alt_defns = {
     ],
     'cut_slice': [
         '(lambda (lambda (_foldri (lambda (lambda (lambda (_<=> $4 $3 $2 $1 (cons $0 $1))))) [])))',
-        '(lambda (lambda (lambda (concat (take (_pred $2) $0) (drop $1 $0)))))'
+        '(lambda (lambda (lambda (concat (take (_pred $2) $0) (drop $1 $0)))))',
+        '(lambda (lambda (filteri (lambda (lambda (not (_<=> $3 $2 $1)))))))',
+        '(_Y (lambda (lambda (lambda (lambda (_iszero (_pred $2) (_iszero $1 $0 ($3 1 (_pred $1) (_tail $0))) '
+            '(cons (first $0) ($3 (_pred $2) (_pred $1) (_tail $0)))))))))'
     ],
     'slice': [
         '(lambda (lambda (_foldri (lambda (lambda (lambda (_<=> $4 $3 $2 (cons $0 $1) $1)))) [])))',
-        '(lambda (lambda (lambda (drop (_pred $2) (take $1 $0)))))'
+        '(lambda (lambda (lambda (drop (_pred $2) (take $1 $0)))))',
+        '(lambda (lambda (filteri (lambda (lambda (_<=> $3 $2 $1))))))',
+        '(_Y (lambda (lambda (lambda (lambda (_iszero (_pred $2) (_iszero $1 [] (cons (first $0) ($3 1 (_pred $1) (_tail $0)))) '
+            '($3 (_pred $2) (_pred $1) (_tail $0))))))))'
     ],
     'drop': [
         '(lambda (filteri (lambda (lambda (> $1 $2)))))',
-        '(lambda (lambda ($1 _tail $0)))',
-        '(_Y (lambda (lambda (lambda (_iszero $1 $0 ($2 (_pred $1) (_tail $0)))))))'
+        '(lambda ($1 _tail))',
+        '(_Y (lambda (lambda (lambda (_iszero $1 $0 ($2 (_pred $1) (_tail $0)))))))',
+        '(lambda (lambda (slice (+ 1 $1) (length $0) $0)))',
+        '(lambda (cut_slice 1 $0))'
     ],
     'take': [
         '(lambda (filteri (lambda (lambda (_<= $1 $2)))))',
-        '(_Y (lambda (lambda (lambda (_iszero $1 [] (cons (first $0) ($2 (_pred $1) (_tail $0))))))))'
+        '(_Y (lambda (lambda (lambda (_iszero $1 [] (cons (first $0) ($2 (_pred $1) (_tail $0))))))))',
+        '(lambda (slice 1 $0))',
+        '(lambda (lambda (cut_slice (+ 1 $1) (length $0) $0)))'
     ],
     'droplast': [
         '(lambda (lambda (take (- (length $0) $1) $0)))',
