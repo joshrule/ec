@@ -1,4 +1,5 @@
 from functools import reduce
+from random import choice
 try:
     import binutil  # required to import from dreamcoder modules
 except ModuleNotFoundError:
@@ -463,22 +464,32 @@ def gen_assignments():
             prims[dsl_keys[i]] = values[i]
         yield prims
 
+def check_assignment_acyclic(assignment):
+    prims = set(assignment.keys())
+    enc = {}
+    acyclic = True
+    while prims:
+        done = set()
+        for prim in prims:
+            try:
+                enc[prim] = make_program(assignment[prim], encoding=enc)
+                done.add(prim)
+            except NameError:
+                continue
+        if len(done) == 0:
+            acyclic = False
+            break
+        prims.difference_update(done)
+    return acyclic
+
+def gen_random_assignments():
+    while True:
+        assignment = {}
+        assignment.update((prim, choice(alt_defns[prim])) for prim in alt_defns)
+        yield assignment
+
 def gen_valid_assignments():
-    for assignment in gen_assignments():
-        prims = set(assignment.keys())
-        enc = {}
-        cyclic = False
-        while prims:
-            done = set()
-            for prim in prims:
-                try:
-                    enc[prim] = make_program(assignment[prim], encoding=enc)
-                    done.add(prim)
-                except NameError:
-                    continue
-            if len(done) == 0:
-                cyclic = True
-                break
-            prims.difference_update(done)
-        if not cyclic:
-            yield assignment
+    yield from filter(check_assignment_acyclic, gen_assignments())
+
+def gen_valid_random_assignments():
+    yield from filter(check_assignment_acyclic, gen_random_assignments())
