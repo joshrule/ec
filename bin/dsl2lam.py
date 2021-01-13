@@ -121,9 +121,9 @@ def encode_num(m):
     return Abstr(Abstr(_encode_num(m, Index(1), Index(0))))
 
 
-encoding = {}
+global_encoding = {}
 
-def translate(expr, encoding=encoding):
+def translate(expr, encoding=global_encoding):
     '''Translates a left-associated list representing an S-expression into a
     lambda calculus term.'''
 
@@ -138,9 +138,9 @@ def translate(expr, encoding=encoding):
             raise NameError('unknown primitive ' + expr)
     else:
         if expr[0] == 'lambda':
-            return Abstr(translate(expr[1]))
+            return Abstr(translate(expr[1], encoding=encoding))
         else:
-            return Appl(translate(expr[0]), translate(expr[1]))
+            return Appl(translate(expr[0], encoding=encoding), translate(expr[1], encoding=encoding))
 
 def left_associate(expr):
     '''Left-associates a nested list representing an S-expression.'''
@@ -151,7 +151,7 @@ def left_associate(expr):
     else:
         return [left_associate(expr[:-1]), left_associate(expr[-1])]
 
-def make_program(expr, encoding=encoding):
+def make_program(expr, encoding=global_encoding):
     return translate(left_associate(parse(expr)), encoding=encoding)
 
 def beta_normal_form(term, keepmin=False, maxreds=None):
@@ -279,7 +279,7 @@ primitives = {
 }
 
 for prim in primitives:
-    encoding[prim] = make_program(primitives[prim])
+    global_encoding[prim] = make_program(primitives[prim])
 
 alt_defns = {
     # booleans
@@ -478,7 +478,6 @@ def gen_assignments():
 def check_assignment_acyclic(assignment):
     prims = set(assignment.keys())
     enc = {}
-    acyclic = True
     while prims:
         done = set()
         for prim in prims:
@@ -488,10 +487,9 @@ def check_assignment_acyclic(assignment):
             except NameError:
                 continue
         if len(done) == 0:
-            acyclic = False
-            break
+            return False
         prims.difference_update(done)
-    return acyclic
+    return True
 
 def gen_random_assignments():
     while True:
