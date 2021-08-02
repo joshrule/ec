@@ -1,0 +1,52 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+ipython = "*"
+
+[packages]
+cairocffi = "*"
+certifi = "*"
+cffi = "*"
+chardet = "*"
+colorama = "*"
+dill = "*"
+frozendict = "*"
+graphviz = "*"
+idna = "*"
+joblib = "*"
+kiwisolver = "*"
+matplotlib = "*"
+multiprocess = "*"
+nltk = "*"
+numpy = "*"
+pathos = "*"
+pox = "*"
+ppft = "*"
+protobuf = "*"
+psutil = "*"
+pycparser = "*"
+# pygame = "*"
+pyparsing = "*"
+pypng = "*"
+python-dateutil = "*"
+pytz = "*"
+pyzmq = "*"
+requests = "*"
+scikit-learn = "*"
+scipy = "*"
+sexpdata = "*"
+six = "*"
+torch = "*"
+torchvision = "*"
+urllib3 = "*"
+Box2D-kengz = "*"
+Cycler = "*"
+Pillow = "*"
+edit-distance = "*"
+pandas = "*"
+textdistance = {extras = ["levenshtein"], version = "*"}
+
+[requires]
