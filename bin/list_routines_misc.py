@@ -53,6 +53,8 @@ def _droplast(i): return lambda xs: xs[:-i] if i > 0 else xs[:]
 def _take(i): return lambda xs: xs[:i]
 def _takelast(i): return lambda xs: xs[-i:] if i > 0 else []
 def _eq(x): return lambda y: x == y
+def _is_empty(x): 
+    return len(x) == 0
 def _mod(x): return lambda y: x % y
 def _slice(x): return lambda y: lambda l: l[(x-1):y]
 def _cut_idx(i): return lambda xs: xs[:(i-1)] + xs[i:]
@@ -165,7 +167,7 @@ def _model_comparison_primitives(max_num):
         Primitive("fix", arrow(t0, arrow(arrow(t0, t1), t0, t1), t1), _fix),
         Primitive("head", arrow(tlist(t0), t0), _first),
         Primitive("if", arrow(tbool, t0, t0, t0), _if),
-        Primitive("is_empty", arrow(t0, t0, tbool), _eq),
+        Primitive("is_empty", arrow(t0, t0, tbool), _is_empty),
         Primitive("is_equal", arrow(t0, t0, tbool), _eq),
         # `lambda` is built into the representation.
         Primitive("tail", arrow(tlist(t0), tlist(t0)), _tail),
@@ -1627,11 +1629,6 @@ def predict(program, visible, semi):
     apps = count_applications(p)
     length = p.size()
     depth = p.depth()
-    # ps = [-0.36083580, -1.40545069, -0.83059482, -0.09067722, -2.72309754, -1.85036866, 0.48188347, 0.02257724, -0.13186151, 0.06397171, -0.29154169, -0.16128822, -0.68534256, -0.68331928, 0.37239565, -0.33644133, -2.19778909, -0.54080431, 0.00494636, 0.27146955, -0.22453515, -0.10963924, -3.03394161, -0.01081037, -0.75062149]
-    # mean_accuracy = 0.0
-    # for p in ps:
-    #     mean_accuracy += sum(ilogit(-0.60883 + p + -0.22964 * length + 0.11709 * depth + 0.39263 * visible + 0.25289 * semi + 0.25874 * block_trial) for block_trial in range(1,12))
-    # mean_accuracy /= (11*len(ps))
     print(f"{program},{length},{depth},1,{apps},{visible},{semi}")
 
 
@@ -1863,20 +1860,19 @@ def process_robustfill_data():
 def process_hl_data():
     Primitive.GLOBALS.clear()
     grammar = Grammar.uniform(model_comparison_primitives_99())
-    stimuli_filename = "~/sync/josh/library/phd/thesis/analyses/stimuli.csv"
-    hl_dirname1 = "/Users/rule/sync/josh/library/research/list-routines/project/list-routine-model-comparison/waves/3_1/data/trs/out/results"
-    hl_dirname2 = "/Users/rule/sync/josh/library/research/list-routines/project/list-routine-human-experiments/waves/1/data/hl/out/results"
+    stimuli_filename = "/Users/rule/sync/josh/projects/research/text/learning_list_functions/data/stimuli.csv"
+    hl_dirname = "/Users/rule/sync/josh/projects/research/data/2020-12-10-15-45-09/out"
     stimuli = (pd.read_csv(stimuli_filename)
                .rename(columns={'program': 'concept'}))
     hls = []
-    for filename in glob.iglob(hl_dirname1 + "/*predictions.csv"):
+    for filename in glob.iglob(hl_dirname + "/model/*predictions.csv"):
         tmp = (pd.read_csv(filename, delimiter=",", header=0)
                  .assign(run=lambda x: x.run + 1,
                          purpose= lambda x: 'model',
                          id=lambda x: x.problem)
                  .drop(['problem'], axis=1))
         hls.append(tmp)
-    for filename in glob.iglob(hl_dirname2 + "/*predictions.csv"):
+    for filename in glob.iglob(hl_dirname + "/dataset/*predictions.csv"):
         tmp = (pd.read_csv(filename, delimiter=",", header=0)
                  .assign(run=lambda x: x.run + 1,
                          purpose= lambda x: 'dataset',
@@ -1884,27 +1880,8 @@ def process_hl_data():
                  .drop(['problem'], axis=1))
         hls.append(tmp)
     hl = pd.concat(hls)
-    (pd.merge(stimuli, hl, how='left', on=['id','purpose','order','trial'])
-     .to_csv("hl_data.csv", header=True, index=False))
-
-def process_hl_data_2():
-    Primitive.GLOBALS.clear()
-    grammar = Grammar.uniform(model_comparison_primitives_99())
-    stimuli_filename = "~/sync/josh/library/phd/thesis/analyses/stimuli.csv"
-    hl_dirname1 = "/Users/rule/sync/josh/library/research/list-routines/project/list-routine-model-comparison/waves/3_1/data/trs/out/results2"
-    stimuli = (pd.read_csv(stimuli_filename)
-               .rename(columns={'program': 'concept'}))
-    hls = []
-    for filename in glob.iglob(hl_dirname1 + "/*predictions.csv"):
-        tmp = (pd.read_csv(filename, delimiter=",", header=0)
-                 .assign(run=lambda x: x.run + 1,
-                         purpose= lambda x: 'model',
-                         id=lambda x: x.problem)
-                 .drop(['problem'], axis=1))
-        hls.append(tmp)
-    hl = pd.concat(hls)
     (pd.merge(hl, stimuli, how='left', on=['id','purpose','order','trial'])
-     .to_csv("hl_data_2.csv", header=True, index=False))
+     .to_csv("hl_2020-12-10-15-45-09.csv", header=True, index=False))
 
 
 
