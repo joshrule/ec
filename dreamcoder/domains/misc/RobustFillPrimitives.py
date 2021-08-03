@@ -214,7 +214,7 @@ def flatten_program(p):
     string = string.replace(')', '')
     #remove '_fn' (optional)
     string = string.split(' ')
-    string = list(filter(lambda x: x is not '', string))
+    string = list(filter(lambda x: x != '', string))
     return string
 
 

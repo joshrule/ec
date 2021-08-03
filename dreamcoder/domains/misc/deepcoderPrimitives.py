@@ -184,7 +184,7 @@ def flatten_program(p):
     for i in range(num_inputs):
         string = string.replace('$' + str(num_inputs-i-1),'input_' + str(i))
     string = string.split(' ')
-    string = list(filter(lambda x: x is not '', string))
+    string = list(filter(lambda x: x != '', string))
     return string
 
 if __name__ == "__main__":
