@@ -23,7 +23,7 @@ from functools import reduce
 from joblib import Parallel, delayed, parallel_backend
 
 # set the seed first thing
-random.seed(1)
+# random.seed(1)
 
 # Define ourselves a failure mode for recursion
 class RecursionDepthExceeded(Exception):
@@ -390,11 +390,11 @@ def human_experiments_wave_1():
         },
         {
             "concept": "(lambda $0)",
-            "adjust": lambda xs: - limit(xs, 1, lambda i,o: len(i) >= 7),
+            "adjust": lambda xs: - limit(xs, 1, lambda i,o: len(i) >= 7) + proportion_unique_elements(xs),
         },
         {
             "concept": "(lambda (singleton (length $0)))",
-            "adjust": lambda xs: proportion_set(xs, lambda i,o: o[0]),
+            "adjust": lambda xs: proportion_set(xs, lambda i,o: o[0]) + proportion_unique_elements(xs),
         },
         {
             "concept": "(lambda (singleton (max $0)))",
@@ -402,7 +402,7 @@ def human_experiments_wave_1():
         },
         {
             "concept": "(lambda (splice (drop 1 (droplast 1 $0)) 2 $0))",
-            "adjust": lambda xs: proportion(xs, lambda i,o: 6 >= len(i) >= 3),
+            "adjust": lambda xs: proportion(xs, lambda i,o: 6 >= len(i) >= 3) + proportion_unique_elements(xs),
         },
         {
             "concept": "(lambda (sort (lambda $0) $0))",
@@ -414,11 +414,11 @@ def human_experiments_wave_1():
         },
         {
             "concept": "(lambda (singleton (sum $0)))",
-            "adjust": lambda xs: 4 * proportion_set(xs, lambda i,o: o[0]) + 2 * proportion_set(xs, lambda i,o: len(i)) + proportion_set(xs, lambda i,o: o[0]/10),
+            "adjust": lambda xs: 4 * proportion_set(xs, lambda i,o: o[0]) + 2 * proportion_set(xs, lambda i,o: len(i)) + proportion_set(xs, lambda i,o: o[0]/10) + proportion_unique_elements(xs),
         },
         {
             "concept": "(lambda (singleton (product $0)))",
-            "adjust": lambda xs: 4 * proportion_set(xs, lambda i,o: o[0]) + 2 * proportion_set(xs, lambda i,o: len(i)) + proportion_set(xs, lambda i,o: o[0]/5),
+            "adjust": lambda xs: 4 * proportion_set(xs, lambda i,o: o[0]) + 2 * proportion_set(xs, lambda i,o: len(i)) + proportion_set(xs, lambda i,o: o[0]/5) + proportion_unique_elements(xs),
         },
         {
             "concept": "(lambda (takelast 3 (sort (lambda $0) $0)))",
@@ -426,7 +426,7 @@ def human_experiments_wave_1():
         },
         {
             "concept": "(lambda (repeat (max $0) (min $0)))",
-            "adjust": lambda xs: proportion(xs, lambda i,o: min(i) <= 10) + proportion_set(xs, lambda i,o: max(i)) + proportion_set(xs, lambda i,o: min(i))
+            "adjust": lambda xs: proportion(xs, lambda i,o: min(i) <= 10) + proportion_set(xs, lambda i,o: max(i)) + proportion_set(xs, lambda i,o: min(i)) + proportion_unique_elements(xs)
         },
         {
             "concept": "(lambda (range 1 1 (last $0)))",
@@ -434,7 +434,7 @@ def human_experiments_wave_1():
         },
         {
             "concept": "(lambda (filter (lambda (> (first $1) (% $0 10))) $0))",
-            "adjust": lambda xs: - limit(xs, 2, lambda i,o: len(o) <= 2 or len(o) >= 7) + proportion(xs, lambda i,o: len(i) > 1 and i[0] < 10) + proportion_set(xs, lambda i,o: i[0] if len(i) > 0 else 0)
+            "adjust": lambda xs: - limit(xs, 2, lambda i,o: len(o) <= 2 or len(o) >= 7) + proportion(xs, lambda i,o: len(i) > 1 and i[0] < 10) + proportion_set(xs, lambda i,o: i[0] if len(i) > 0 else 0) + proportion_unique_elements(xs)
         },
         {
             "concept": "(lambda (cons (last $0) $0))",
@@ -482,7 +482,7 @@ def human_experiments_wave_1():
         },
         {
             "concept": "(lambda (filter (lambda (== (/ (first $1) 10) (/ $0 10))) $0))",
-            "adjust": lambda xs: proportion_set(xs, lambda i,o: i[0]/10 if len(i) else 0) + proportion_set(xs, lambda i,o: len(i) - len(o)) - limit(xs, 1, lambda i,o: len(o) <= 1 or len(o) == len(i)) + proportion_set(xs, lambda i,o: len(set(o)))
+            "adjust": lambda xs: proportion_set(xs, lambda i,o: i[0]/10 if len(i) else 0) + proportion_set(xs, lambda i,o: len(i) - len(o)) - limit(xs, 1, lambda i,o: len(o) <= 1 or len(o) == len(i)) + proportion_set(xs, lambda i,o: len(set(o))) + proportion_unique_elements(xs)
         },
         {
             "concept": "(lambda (drop 1 $0))",
@@ -726,7 +726,7 @@ def human_experiments_wave_1():
         },
         {
             "concept": "(lambda (filter (lambda (> $0 (first $1))) $0))",
-            "adjust": lambda xs: proportion(xs, lambda i,o: len(i) > 8) - 2 * limit(xs, 1, lambda i,o: len(o) < 2) - limit(xs, 1, lambda i,o: len(o) > 5)
+            "adjust": lambda xs: proportion(xs, lambda i,o: len(i) > 8) - 2 * limit(xs, 1, lambda i,o: len(o) < 2) - limit(xs, 1, lambda i,o: len(o) > 5) + proportion_unique_elements(xs)
         },
         {
             "concept": "(lambda (concat $0 (cons 0 $0)))",
@@ -822,7 +822,7 @@ def human_experiments_wave_1():
         },
         {
             "concept": "(lambda (insert (last $0) (first $0) (unique $0)))",
-            "adjust": lambda xs: 4 * proportion(xs, lambda i,o: len(i) > 1 and i[0] <= len(set(i))-1) + proportion_set(xs, lambda i,o: len(o)) + proportion_set(xs, lambda i,o: len(i)-len(o)) - limit(xs, 1, lambda i,o: len(i) > 0 and i[0] == len(set(i))) - limit(xs, 1, lambda i,o: len(i) > 0 and i[0] == 1) - forbid(xs, lambda i,o: len(i) > 0 and i[0] == 0),
+            "adjust": lambda xs: 4 * proportion(xs, lambda i,o: len(i) > 1 and i[0] <= len(set(i))-1) + proportion_set(xs, lambda i,o: len(o)) + proportion_set(xs, lambda i,o: len(i)-len(o)) - limit(xs, 1, lambda i,o: len(i) > 0 and i[0] == len(set(i))) - limit(xs, 1, lambda i,o: len(i) > 0 and i[0] == 1) - forbid(xs, lambda i,o: len(i) > 0 and i[0] == 0) + proportion_unique_elements(xs),
         },
         {
             "concept": "(lambda (splice (slice 4 5 $0) (- (length $0) 2) (reverse $0)))",
@@ -838,11 +838,11 @@ def human_experiments_wave_1():
         },
         {
             "concept": "(lambda (cut_idx (first $0) (drop 1 $0)))",
-            "adjust": lambda xs: 4 * proportion(xs, lambda i,o: len(i) > 1 and i[0] <= len(i)-1) + proportion_set(xs, lambda i,o: len(i)-i[0] if len(i) > 0 else 0) + proportion_set(xs, lambda i,o: i[0] if len(i) > 0 else 0) - limit(xs, 1, lambda i,o: len(i) > 0 and i[0] == len(i)-1) - limit(xs, 1, lambda i,o: len(i) > 0 and i[0] == 1) - forbid(xs, lambda i,o: len(i) > 0 and i[0] == 0),
+            "adjust": lambda xs: 4 * proportion(xs, lambda i,o: len(i) > 1 and i[0] <= len(i)-1) + proportion_set(xs, lambda i,o: len(i)-i[0] if len(i) > 0 else 0) + proportion_set(xs, lambda i,o: i[0] if len(i) > 0 else 0) - limit(xs, 1, lambda i,o: len(i) > 0 and i[0] == len(i)-1) - limit(xs, 1, lambda i,o: len(i) > 0 and i[0] == 1) - forbid(xs, lambda i,o: len(i) > 0 and i[0] == 0) + proportion_unique_elements(xs),
         },
         {
             "concept": "(lambda (replace (first $0) (length $0) (drop 1 $0)))",
-            "adjust": lambda xs: 4 * proportion(xs, lambda i,o: len(i) > 1 and i[0] <= len(i)-1) + proportion_set(xs, lambda i,o: len(i)) + proportion_set(xs, lambda i,o: i[0] if len(i) > 0 else 0) - limit(xs, 1, lambda i,o: len(i) > 0 and i[0] == len(i)-1) - limit(xs, 1, lambda i,o: len(i) > 0 and i[0] == 1) - forbid(xs, lambda i,o: len(i) > 0 and i[0] == 0),
+            "adjust": lambda xs: 4 * proportion(xs, lambda i,o: len(i) > 1 and i[0] <= len(i)-1) + proportion_set(xs, lambda i,o: len(i)) + proportion_set(xs, lambda i,o: i[0] if len(i) > 0 else 0) - limit(xs, 1, lambda i,o: len(i) > 0 and i[0] == len(i)-1) - limit(xs, 1, lambda i,o: len(i) > 0 and i[0] == 1) - forbid(xs, lambda i,o: len(i) > 0 and i[0] == 0) + proportion_unique_elements(xs),
         },
         {
             "concept": "(lambda (sort (lambda (/ $0 10)) $0))",
@@ -886,7 +886,7 @@ def human_experiments_wave_1():
         },
         {
             "concept": "(lambda (drop (first $0) (droplast (last $0) $0)))",
-            "adjust": lambda xs: 4 * proportion(xs, lambda i,o: len(i) > 1 and (i[0] + i[-1]) <= len(i)) + proportion_set(xs, lambda i,o: i[0] if len(i) > 0 else 0) + proportion_set(xs, lambda i,o: i[-1] if len(i) > 0 else 0) + proportion_set(xs, lambda i,o: len(o)) - limit(xs, 2, lambda i,o: len(i) > 0 and i[0] == 0 or i[-1] == 0)
+            "adjust": lambda xs: 4 * proportion(xs, lambda i,o: len(i) > 1 and (i[0] + i[-1]) <= len(i)) + proportion_set(xs, lambda i,o: i[0] if len(i) > 0 else 0) + proportion_set(xs, lambda i,o: i[-1] if len(i) > 0 else 0) + proportion_set(xs, lambda i,o: len(o)) - limit(xs, 2, lambda i,o: len(i) > 0 and i[0] == 0 or i[-1] == 0) + proportion_unique_elements(xs)
         },
         {
             "concept": "(lambda (unique (flatten (zip $0 (reverse $0)))))",
@@ -1308,6 +1308,10 @@ def model_comparison_wave_3():
         },
     ]
 
+def sample_examples_greedy_parallel(p,adjust,n=10,n_restarts=1000,n_tries=1000,small=False):
+    bests = Parallel(n_jobs = -1, verbose = 10)(delayed(greedy_set)(p, adjust, n, n_tries, small) for _ in range(n_restarts))
+    return max(bests, key = lambda x: x[1])[0]
+
 def sample_examples_greedy(p,adjust,n=10,n_restarts=10000,n_tries=100,small=False):
     best_score = 0.0
     best_s = None
@@ -1317,8 +1321,8 @@ def sample_examples_greedy(p,adjust,n=10,n_restarts=10000,n_tries=100,small=Fals
             best_s = s
             best_score = score
             print(f"{i_restart}. {best_score}")
-            for i,o in s:
-                print(f"  {i} = {o}")
+        else: 
+            print(f"{i_restart}. no change")
     return best_s
 
 def greedy_set(p,adjust,n,n_tries,small):
@@ -1332,13 +1336,10 @@ def greedy_set(p,adjust,n,n_tries,small):
             except:
                 continue
             if valid_output(o, small):
-                options = []
-                for idx in range(n):
-                    new_s = s[:]
-                    new_s[idx] = (i,o)
-                    new_score = score_set(new_s, adjust)
-                    options.append((new_score, new_s))
-                new_score, new_s = max(options, key = lambda x: x[0])
+                idx = random.randint(0, n-1)
+                new_s = s[:]
+                new_s[idx] = (i,o)
+                new_score = score_set(new_s, adjust)
                 if new_score > score:
                     s = new_s
                     score = new_score
@@ -1582,7 +1583,7 @@ def process(dirname, i, c, n_trials=10, n_orders=2, verbose=True, small=False, h
     elif kind == "parallel":
         examples = sample_examples_parallel(p, c["adjust"], n=n_trials, n_pools=1000, n_tries=20, n_sets=1000, small=small)
     elif kind == "greedy":
-        examples = sample_examples_greedy(p, c["adjust"], n=n_trials, n_restarts=1000, n_tries=1000, small=small)
+        examples = sample_examples_greedy_parallel(p, c["adjust"], n=n_trials, n_restarts=1000, n_tries=1000, small=small)
     else:
         examples = sample_examples(p, c["adjust"], n=n_trials, n_pools=1000, n_tries=20, n_sets=1000, verbose=verbose, small=small)
     if n_orders == 0:
@@ -1901,29 +1902,28 @@ if __name__ == "__main__":
     ## Generating new data for BIG-bench
 
     for i, c in enumerate(model_comparison_wave_3(), 1):
-        if i < 3:
-            process("./tmp",
-                    i,
-                    c,
-                    n_trials=11,
-                    n_orders=1,
-                    verbose=True,
-                    small=(i <= 80 and i != 76),
-                    human=False,
-                    kind="greedy",
-            )
+        process("./tmp",
+                i,
+                c,
+                n_trials=32,
+                n_orders=0,
+                verbose=True,
+                small=(i <= 80 and i != 76),
+                human=False,
+                kind="greedy",
+        )
+
     for i, c in enumerate(human_experiments_wave_1(), 101):
-        if i < 103:
-            process("./tmp",
-                    i,
-                    c,
-                    n_trials=32,
-                    n_orders=1,
-                    verbose=True,
-                    small=False,
-                    human=False,
-                    kind="greedy",
-            )
+        process("./tmp",
+                i,
+                c,
+                n_trials=32,
+                n_orders=0,
+                verbose=True,
+                small=False,
+                human=False,
+                kind="greedy",
+        )
 
     ## Human Experiment - Wave Pilot
     #
