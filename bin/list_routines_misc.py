@@ -22,8 +22,6 @@ from dreamcoder.grammar import Grammar
 from functools import reduce
 from joblib import Parallel, delayed, parallel_backend
 
-# set the seed first thing
-# random.seed(1)
 
 # Define ourselves a failure mode for recursion
 class RecursionDepthExceeded(Exception):
@@ -1005,10 +1003,10 @@ def words(xs, sep=0):
 
 def model_comparison_wave_3():
     return [
+        # c001
         {'concept': '(lambda (singleton (third $0)))',
          'adjust': lambda xs: (3.0 if all(len(i) >= 3 for i, o in xs) else 0) + 2 * proportion_unique_elements(xs)
-        }
-        ,
+        },
         {'concept': '(lambda (if (> 3 (length $0)) empty (singleton (third $0))))',
          'adjust': lambda xs: 6/center(xs, lambda i,o: len(i) >= 3) + 2 * proportion_unique_elements(xs)
         },
@@ -1016,7 +1014,7 @@ def model_comparison_wave_3():
          'adjust': lambda xs: (3.0 if all(len(i) >= 7 for i, o in xs) else 0) + 2 * proportion_unique_elements(xs)
         },
         {'concept': '(lambda (if (> 7 (length $0)) empty (singleton (nth 7 $0))))',
-         'adjust': lambda xs: (3.0 if 0.6 >= sum(len(i) >= 7 for i, o in xs)/len(xs) >= 0.4 else 0) + 2 * proportion_unique_elements(xs), 
+         'adjust': lambda xs: 6/center(xs, lambda i,o: len(i) >= 7) + 2 * proportion_unique_elements(xs), 
         },
         {'concept': '(lambda (singleton (nth (first $0) (drop 1 $0))))',
          'adjust': lambda xs: 2.0 * proportion(xs, lambda i,o: i[0] <= len(i)-1) + 2.0 * proportion_set(xs, lambda i,o: i[0]) + 2 * proportion_unique_elements(xs) + 2 * proportion_set(xs, lambda i,o: len(i)-i[0]) - 0.5 * limit(xs, 1, lambda i,o: i[0] == 1)
@@ -1033,8 +1031,9 @@ def model_comparison_wave_3():
         {'concept': '(lambda (take 6 $0))',
          'adjust': lambda xs: (3.0 if 0.6 >= sum(len(i) >= 6 for i, o in xs)/len(xs) >= 0.4 else 0) + 2.0 * proportion_unique_elements(xs),
         },
+        # c010
         {'concept': '(lambda (take (first $0) (drop 1 $0)))',
-         'adjust': lambda xs: (3.0 if all(i[0] <= len(i)-1 for i, o in xs) else 0) + 2.0 * proportion_unique_elements(xs),
+            'adjust': lambda xs: (3.0 if all(i[0] <= len(i)-1 for i, o in xs) else 0) + 2.0 * proportion_unique_elements(xs) + 2.0 * proportion_set(xs, lambda i,o: max(0, len(i) - i[0])) + 2 * proportion_set(xs, lambda i,o: i[0]) - 0.5 * limit(xs, 2, lambda i,o: i[0] in [0, 1])
         },
         {'concept': '(lambda (slice 2 4 $0))',
          'adjust': lambda xs: (3.0 if all(len(i) >= 4 for i, o in xs) else 0) + 2.0 * proportion_unique_elements(xs),
@@ -1043,13 +1042,13 @@ def model_comparison_wave_3():
          'adjust': lambda xs: (sum(2 > len(i) for i,o in xs) >= 2) + (sum(4 > len(i) >= 2 for i,o in xs) >= 2) + (sum(len(i) >= 4 for i,o in xs) >= 4) + (2.0 * proportion_unique_elements(xs)),
         },
         {'concept': '(lambda (slice 3 7 $0))',
-         'adjust': lambda xs: (3.0 if all(len(i) >= 7 for i, o in xs) else 0) + (2.0 * proportion_unique_elements(xs)),
+            'adjust': lambda xs: 3.0 * proportion(xs, lambda i,o: len(i) >= 7) + 2.0 * proportion_unique_elements(xs),
         },
         {'concept': '(lambda (slice 3 7 $0))',
          'adjust': lambda xs: (sum(3 > len(i) for i,o in xs) >= 2) + (sum(7 > len(i) >= 3 for i,o in xs) >= 2) + (sum(len(i) >= 7 for i,o in xs) >= 4) + (2.0 * proportion_unique_elements(xs))
         },
         {'concept': '(lambda (slice (first $0) (second $0) (drop 2 $0)))',
-         'adjust': lambda xs: 4.0 * proportion(xs, lambda i,o: len(i)-2 >= i[1] >= i[0] > 0) + proportion_set(xs, lambda i,o: i[0]) + proportion_set(xs, lambda i,o: i[1]) + proportion_set(xs, lambda i,o: len(i)-i[1])  - 0.5 * limit(xs, 1, lambda i,o: len(i)-2 == i[1]) - 0.5 * limit(xs, 1, lambda i,o: i[1] == i[0]) + 2.0 * proportion_unique_elements(xs)
+         'adjust': lambda xs: 4.0 * proportion(xs, lambda i,o: len(i)-2 >= i[1] >= i[0] > 0) + proportion_set(xs, lambda i,o: i[0]) + proportion_set(xs, lambda i,o: i[1]) +proportion_set(xs, lambda i,o: max(0, len(i)-i[0]-2)) + proportion_set(xs, lambda i,o: max(0, len(i)-i[1]-2)) - 0.5 * limit(xs, 1, lambda i,o: len(i)-2 == i[1]) - 0.5 * limit(xs, 1, lambda i,o: i[1] == i[0]) + 2.0 * proportion_unique_elements(xs)
         },
         {'concept': '(lambda (replace 2 8 $0))',
          'adjust': lambda xs: (3.0 if all(len(i) >= 2 for i, o in xs) else 0) + 2.0 * proportion_unique_elements(xs),
@@ -1061,8 +1060,9 @@ def model_comparison_wave_3():
          'adjust': lambda xs: (3.0 if all(len(i) >= 6 for i, o in xs) else 0) + 2.0 * proportion_unique_elements(xs),
         },
         {'concept': '(lambda (replace 6 3 $0))',
-         'adjust': lambda xs: (3.0 if 0.6 >= sum(6 > len(i) for i, o in xs)/len(xs) >= 0.4 else 0) + 2.0 * proportion_unique_elements(xs),
+                'adjust': lambda xs: 6.0/center(xs, lambda i,o: 6 > len(i)) + proportion_set(xs, lambda i,o: len(i)) + 2.0 * proportion_unique_elements(xs),
         },
+        # c020
         {'concept': '(lambda (replace 1 (last $0) $0))',
          'adjust': lambda xs: (3.0 if all(len(i) >= 1 for i, o in xs) else 0) + 2.0 * proportion_unique_elements(xs),
         },
@@ -1073,7 +1073,7 @@ def model_comparison_wave_3():
          'adjust': lambda xs: (3.0 if all(len(i) >= 2 for i, o in xs) else 0) + 2.0 * proportion_unique_elements(xs),
         },
         {'concept': '(lambda (insert (if (> 5 (length $0)) 8 5) 2 $0))',
-         'adjust': lambda xs: (3.0 if all(len(i) >= 2 for i, o in xs) else 0) + 2.0 * proportion_unique_elements(xs),
+         'adjust': lambda xs: 6/center(xs, lambda i,o: len(i) > 5) + 2.0 * proportion_unique_elements(xs),
         },
         {'concept': '(lambda (insert (if (> 5 (first $0)) 8 5) 2 $0))',
          'adjust': lambda xs: (3.0 if all(len(i) >= 2 for i, o in xs) else 0) + 2.0 * proportion_unique_elements(xs) + 4.0 / center(xs, lambda i,o: i[0] > 5),
@@ -1085,7 +1085,7 @@ def model_comparison_wave_3():
          'adjust': lambda xs: (3.0 if all(len(i) >= 3 for i, o in xs) else 0) + 2.0 * proportion_unique_elements(xs),
         },
         {'concept': '(lambda (cut_idx (if (== (first $0) (second $0)) 2 3) $0))',
-         'adjust': lambda xs: 4 * proportion(xs, lambda i,o: len(i) >= 3 and i[1] != i[2]) + 2 / center(xs, lambda i,o: len(i) >= 3 and i[0] == i[1]) + 2 * proportion_set(xs, lambda i,o: (i[0], i[1]) if len(i) > 1 else (0, 0)) + 2.0 * proportion_unique_elements(xs),
+         'adjust': lambda xs: 4 * proportion(xs, lambda i,o: len(i) >= 3 and i[1] != i[2]) + 4 / center(xs, lambda i,o: len(i) >= 2 and i[0] == i[1], factor = 6/11) + proportion_set(xs, lambda i,o: tuple(set([i[0], i[1], i[2]])) if len(i) > 2 else (0)) + 2.0 * proportion_unique_elements(xs),
         },
         {'concept': '(lambda (cut_idx (if (> (first $0) (second $0)) 2 3) $0))',
          'adjust': lambda xs: 4 * proportion(xs, lambda i,o: len(i) >= 3 and ((i[0] > i[1] and i[0] < i[2]) or (i[0] > i[2] and i[0] < i[1])))  + 2 / center(xs, lambda i,o: len(i) >= 3 and i[0] > i[1]) + 2 * proportion_set(xs, lambda i,o: (i[0], i[1]) if len(i) > 1 else (0, 0)) + 2.0 * proportion_unique_elements(xs),
@@ -1093,6 +1093,7 @@ def model_comparison_wave_3():
         {'concept': '(lambda (drop 2 $0))',
          'adjust': lambda xs: (3.0 if all(len(i) >= 2 for i, o in xs) else 0) + 2.0 * proportion_unique_elements(xs),
         },
+        # c030
         {'concept': '(lambda (droplast 2 $0))',
          'adjust': lambda xs: 4 * proportion(xs, lambda i,o: len(i) >= 2) + proportion_set(xs, lambda i,o: len(o)) + 2.0 * proportion_unique_elements(xs),
         },
@@ -1112,7 +1113,7 @@ def model_comparison_wave_3():
          'adjust': lambda xs: 4 * proportion(xs, lambda i,o: len(i) >= 4 and ((i[1] == i[2] and i[0] != i[3]) or (i[1] != i[2] and i[0] == i[3]))) + 4 / center(xs, lambda i,o: i[1] == i[2]) + 2.0 * proportion_unique_elements(xs)
         },
         {'concept': '(lambda (if (> (second $0) (third $0)) (swap 2 3 $0) (swap 1 4 $0)))',
-         'adjust': lambda xs: 4 * proportion(xs, lambda i,o: len(i) >= 4 and ((i[1] > i[2] and i[0] <= i[3]) or (i[1] <= i[2] and i[0] > i[3]))) + 2 / center(xs, lambda i,o: i[1] > i[2]) + 2.0 * proportion_unique_elements(xs),
+         'adjust': lambda xs: 4 * proportion(xs, lambda i,o: len(i) >= 4) + 4 / center(xs, lambda i,o: i[1] > i[2]) + 2.0 * proportion_unique_elements(xs),
         },
         {'concept': '(lambda (append $0 3))',
          'adjust': lambda xs: 2.0 * proportion_unique_elements(xs),
@@ -1123,29 +1124,30 @@ def model_comparison_wave_3():
         {'concept': '(lambda (if (== (length $0) 3) (append $0 3) (if (== (length $0) 9) (append $0 9) $0)))',
          'adjust': lambda xs: 4 / center(xs, lambda i,o: len(i) in [3, 9], factor = 8/11) + 1 / max(1, abs(sum(len(i) == 3 for i,o in xs) - sum(len(i) == 9 for i,o in xs))) + 2.0 * proportion_unique_elements(xs),
         },
+        # c040
         {'concept': '(lambda (if (is_in $0 3) (append $0 3) (if (is_in $0 9) (append $0 9) $0)))',
          'adjust': lambda xs: 4 / center(xs, lambda i,o: (3 in i and 9 not in i), factor = 4/11) + 4 / center(xs, lambda i,o: (9 in i and 3 not in i), factor = 4/11) + 4 / center(xs, lambda i,o: (3 not in i and 9 not in i), factor = 3/11) + 2.0 * proportion_unique_elements(xs)
         },
         {'concept': '(lambda (singleton 9))',
-         'adjust': lambda xs: 1.0,
+         'adjust': lambda xs: 2 * proportion_unique_elements(xs),
         },
         {'concept': '(lambda (cons 5 (singleton 2)))',
-         'adjust': lambda xs: 1.0,
+         'adjust': lambda xs: 2 * proportion_unique_elements(xs),
         },
         {'concept': '(lambda (cons 8 (cons 2 (cons 7 (cons 0 (singleton 3))))))',
-         'adjust': lambda xs: 1.0,
+         'adjust': lambda xs: 2 * proportion_unique_elements(xs),
         },
         {'concept': '(lambda (cons 1 (cons 9 (cons 4 (cons 3 (cons 2 (cons 5 (cons 8 (cons 0 (cons 4 (singleton 9)))))))))))',
-         'adjust': lambda xs: 1.0,
+         'adjust': lambda xs: 2 * proportion_unique_elements(xs),
         },
         {'concept': '(lambda $0)',
-         'adjust': lambda xs: 2.0 * proportion_unique_elements(xs),
+         'adjust': lambda xs: 2 * proportion_unique_elements(xs),
         },
         {'concept': '(lambda (cons 7 $0))',
-         'adjust': lambda xs: 2.0 * proportion_unique_elements(xs),
+         'adjust': lambda xs: 2 * proportion_unique_elements(xs),
         },
         {'concept': '(lambda (cons 9 (cons 6 (cons 3 (cons 8 (cons 5 $0))))))',
-         'adjust': lambda xs: 2.0 * proportion_unique_elements(xs),
+         'adjust': lambda xs: 2 * proportion_unique_elements(xs),
         },
         {'concept': '(lambda (take 1 $0))',
          'adjust': lambda xs: (3.0 if all(len(i) > 0 for i,o in xs) else 0.0) + 2.0 * proportion_unique_elements(xs),
@@ -1153,20 +1155,21 @@ def model_comparison_wave_3():
         {'concept': '(lambda (drop 1 $0))',
          'adjust': lambda xs: (3.0 if all(len(i) > 0 for i,o in xs) else 0.0) + 2.0 * proportion_unique_elements(xs),
         },
+        # c050
         {'concept': '(lambda (cons (first $0) $0))',
-         'adjust': lambda xs: 2.0 * proportion_unique_elements(xs),
+         'adjust': lambda xs: 2.0 * proportion_unique_elements(xs) + 2 * proportion_set(xs, lambda i,o: i[0] if len(i) > 0 else -1)
         },
         {'concept': '(lambda (concat (repeat (first $0) 5) $0))',
-         'adjust': lambda xs: 2.0 * proportion_unique_elements(xs),
+         'adjust': lambda xs: 2 * proportion_unique_elements(xs) + 2 * proportion_set(xs, lambda i,o: i[0] if len(i) > 0 else -1) + 2 * proportion(xs, lambda i,o : len(i) > 1)
         },
         {'concept': '(lambda (repeat (first $0) 10))',
          'adjust': lambda xs: 2.0 * proportion_unique_elements(xs),
         },
         {'concept': '(lambda (concat (repeat (first $0) 2) (drop 2 $0)))',
-         'adjust': lambda xs: 2.0 * proportion_unique_elements(xs),
+         'adjust': lambda xs: 2 * proportion_unique_elements(xs) + 2 * proportion_set(xs, lambda i,o: i[0] if len(i) > 0 else -1) + 2 * proportion(xs, lambda i,o : len(i) > 1)
         },
         {'concept': '(lambda (concat (repeat (third $0) 3) (drop 3 $0)))',
-         'adjust': lambda xs: 2.0 * proportion_unique_elements(xs),
+         'adjust': lambda xs: 2.0 * proportion_unique_elements(xs) + 2 * proportion_set(xs, lambda i,o: i[2] if len(i) > 2 else -1),
         },
         {'concept': '(lambda (concat (slice 3 4 $0) (concat (take 2 $0) (drop 4 $0))))',
          'adjust': lambda xs: (3.0 if all(len(i) >= 4 for i,o in xs) else 0) + 2.0 * proportion_unique_elements(xs),
@@ -1175,14 +1178,15 @@ def model_comparison_wave_3():
          'adjust': lambda xs: (3.0 if all(len(i) >= 5 for i,o in xs) else 0.0) + 2.0 * proportion_unique_elements(xs),
         },
         {'concept': '(lambda (insert 4 7 $0))',
-         'adjust': lambda xs: (3.0 if all(len(i) >= 7 for i,o in xs) else 0.0) + 2.0 * proportion_unique_elements(xs),
+         'adjust': lambda xs: 6 * proportion(xs, lambda i,o: len(i) >= 7) + 2 * proportion_unique_elements(xs),
         },
         {'concept': '(lambda (drop 7 $0))',
-         'adjust': lambda xs: (3.0 if all(len(i) >= 7 for i,o in xs) else 0.0) + 2.0 * proportion_unique_elements(xs),
+         'adjust': lambda xs: 6 * proportion(xs, lambda i,o: len(i) >= 7) - 2 * limit(xs, 2, lambda i,o: o == []) + 2.0 * proportion_unique_elements(xs),
         },
         {'concept': '(lambda (swap 4 8 $0))',
          'adjust': lambda xs: (3.0 if all(len(i) >= 8 for i,o in xs) else 0.0) + 2.0 * proportion_unique_elements(xs),
         },
+        # c060
         {'concept': '(lambda (swap 3 1 (replace 4 4 (cut_idx 6 (take 7 $0)))))',
          'adjust': lambda xs: 4 * proportion(xs, lambda i,o: len(i) >= 7) + 2 * proportion_unique_elements(xs),
         },
@@ -1193,7 +1197,7 @@ def model_comparison_wave_3():
          'adjust': lambda xs: (3.0 if all(len(i) >= 1 for i,o in xs) else 0.0) + 2.0 * proportion_unique_elements(xs),
         },
         {'concept': '(lambda (drop (first $0) (drop 1 $0)))',
-         'adjust': lambda xs: (3.0 if all(i[0] <= len(i)-1 for i,o in xs) else 0.0) + 2.0 * proportion_unique_elements(xs),
+                'adjust': lambda xs: 4 * proportion(xs, lambda i,o: len(o) >= 2) + 4 * proportion_set(xs, lambda i,o: i[0]) + 2 * proportion_set(xs, lambda i,o: len(o)) - 2 * limit(xs, 1, lambda i,o: i[0] < 2) - 2 * limit(xs, 0, lambda i,o: i[0] > len(i)-1) + proportion_unique_elements(xs),
         },
         {'concept': '(lambda (drop 1 (droplast 1 $0)))',
          'adjust': lambda xs: (3.0 if all(len(i) >= 2 for i,o in xs) else 0.0) + 2.0 * proportion_unique_elements(xs),
@@ -1205,28 +1209,29 @@ def model_comparison_wave_3():
          'adjust': lambda xs: (3.0 if all(len(i) >= 1 for i,o in xs) else 0.0) + 2.0 * proportion_unique_elements(xs),
         },
         {'concept': '(lambda (cons (last $0) (append (drop 1 (droplast 1 $0)) (first $0))))',
-         'adjust': lambda xs: (3.0 if all(len(i) >= 2 for i,o in xs) else 0.0) + 2.0 * proportion_unique_elements(xs),
+         'adjust': lambda xs: 6 * proportion(xs, lambda i,o: len(i) > 2) + 2 * proportion_set(xs, lambda i,o: (i[0], i[-1])) + 2 * proportion_unique_elements(xs),
         },
         {'concept': '(lambda (concat $0 (cons 7 (cons 3 (cons 8 (cons 4 (singleton 3)))))))',
          'adjust': lambda xs: 2.0 * proportion_unique_elements(xs),
         },
         {'concept': '(lambda (concat (cons 9 (cons 3 (cons 4 (singleton 0)))) (concat $0 (cons 7 (cons 2 (cons 9 (singleton 1)))))))',
-         'adjust': lambda xs: 2.0 * proportion_unique_elements(xs),
+                'adjust': lambda xs: 2 * proportion_set(xs, lambda i,o: i[0] if len(i) > 0 else -1) + 2 * proportion_set(xs, lambda i,o: i[1] if len(i) > 1 else -1) + 2 * proportion_unique_elements(xs),
         },
+        # c070
         {'concept': '(lambda (concat $0 $0))',
-         'adjust': lambda xs: 2.0 * proportion_unique_elements(xs),
+         'adjust': lambda xs: 2 * proportion_unique_elements(xs),
         },
         {'concept': '(lambda (map (lambda (+ 2 $0)) $0))',
-         'adjust': lambda xs: 2.0 * proportion_unique_elements(xs),
+         'adjust': lambda xs: 2 * proportion_unique_elements(xs) - 2 * limit(xs, 0, lambda i,o: len(i) < 2),
         },
         {'concept': '(lambda (flatten (map (lambda (cons $0 (singleton $0))) $0)))',
-         'adjust': lambda xs: 2.0 * proportion_unique_elements(xs),
+         'adjust': lambda xs: 2 * proportion_unique_elements(xs) - 2 * limit(xs, 0, lambda i,o: len(i) < 2),
         },
         {'concept': '(lambda (mapi + $0))',
-         'adjust': lambda xs: 2.0 * proportion_unique_elements(xs),
+         'adjust': lambda xs: 2 * proportion_unique_elements(xs) - 2 * limit(xs, 0, lambda i,o: len(i) < 2),
         },
         {'concept': '(lambda (filter (lambda (> $0 7)) $0))',
-         "adjust": lambda xs: min(1.0, 1.0/(len(xs)-2)*sum((len(o)/len(i) <= 0.75 if len(i) > 0 else 1) for i, o in xs)) + 2.0 * proportion_unique_elements(xs),
+                'adjust': lambda xs: 4 * proportion(xs, lambda i,o: 5 >= len(o) >= 3) + 4 * proportion(xs, lambda i,o: len(i) > 5) + 2 * proportion_set(xs, lambda i,o: i.count(8))+ 2 * proportion_set(xs, lambda i,o: i.count(9)) + proportion_unique_elements(xs),
         },
         {'concept': '(lambda (filteri (lambda (lambda (is_odd $1))) $0))',
          'adjust': lambda xs: 2.0 * proportion_unique_elements(xs),
@@ -1238,19 +1243,20 @@ def model_comparison_wave_3():
          'adjust': lambda xs: 2.0 * proportion_unique_elements(xs),
         },
         {'concept': '(lambda (singleton (max $0)))',
-         "adjust": lambda xs: 4 * proportion_set(xs, lambda i,o: o[0]) + 2 * proportion_unique_elements(xs),
+         'adjust': lambda xs: 4 * proportion_set(xs, lambda i,o: o[0]) + 2 * proportion(xs, lambda i,o: len(i) >= 5) + 2 * proportion_unique_elements(xs),
         },
         {'concept': '(lambda (singleton (sum $0)))',
          'adjust': lambda xs: 2.0 * proportion_unique_elements(xs),
         },
+        # c080
         {'concept': '(lambda (reverse $0))',
-         'adjust': lambda xs: 2.0 * proportion_unique_elements(xs),
+         'adjust': lambda xs: 2 * proportion(xs, lambda i,o: 7 >= len(i) >= 3) + 2.0 * proportion_unique_elements(xs),
         },
         {'concept': '(lambda (singleton (third $0)))',
          'adjust': lambda xs: (3.0 if all(len(i) >= 3 for i, o in xs) else 0) + 2.0 * proportion_unique_elements(xs)
         },
         {'concept': '(lambda (if (> 3 (length $0)) empty (singleton (third $0))))',
-         'adjust': lambda xs: (3.0 if 0.6 >= sum(len(i) >= 3 for i, o in xs)/len(xs) >= 0.4 else 0) + 2.0 * proportion_unique_elements(xs),
+         'adjust': lambda xs: 6/center(xs, lambda i,o: len(i) > 2) + 2 * proportion_unique_elements(xs) + proportion_set(xs, lambda i,o: len(i)),
         },
         {'concept': '(lambda (singleton (nth 7 $0)))',
          'adjust': lambda xs: (3.0 if all(len(i) >= 7 for i, o in xs) else 0) + 2.0 * proportion_unique_elements(xs)
@@ -1259,7 +1265,7 @@ def model_comparison_wave_3():
          'adjust': lambda xs: (3.0 if 0.6 >= sum(len(i) >= 7 for i, o in xs)/len(xs) >= 0.4 else 0) + 2.0 * proportion_unique_elements(xs),
         },
         {'concept': '(lambda (singleton (nth (first $0) (drop 1 $0))))',
-         'adjust': lambda xs: (3.0 if all(i[0] <= len(i)-1 for i, o in xs) else 0) + 2.0 * proportion_unique_elements(xs),
+         'adjust': lambda xs: 2.0 * proportion(xs, lambda i,o: i[0] <= len(i)-1) + 2.0 * proportion_set(xs, lambda i,o: i[0]) + 2 * proportion_unique_elements(xs) + 3 * proportion_set(xs, lambda i,o: len(i)-i[0]) - 0.5 * limit(xs, 1, lambda i,o: i[0] == 1)
         },
         {'concept': '(lambda (swap 1 4 $0))',
          'adjust': lambda xs: (3.0 if all(len(i) >= 4 for i, o in xs) else 0) + 2.0 * proportion_unique_elements(xs),
@@ -1273,6 +1279,7 @@ def model_comparison_wave_3():
         {'concept': '(lambda (if (> (second $0) (third $0)) (swap 2 3 $0) (swap 1 4 $0)))',
          'adjust': lambda xs: 4 * proportion(xs, lambda i,o: len(i) >= 4 and ((i[1] > i[2] and i[0] <= i[3]) or (i[1] <= i[2] and i[0] > i[3]))) + 2 / center(xs, lambda i,o: i[1] > i[2]) + 2.0 * proportion_unique_elements(xs),
         },
+        # c090
         {'concept': '(lambda (cons 18 (cons 42 (cons 77 (cons 20 (singleton 36))))))',
          'adjust': lambda xs: 1.0,
         },
@@ -1298,13 +1305,30 @@ def model_comparison_wave_3():
          'adjust': lambda xs: proportion_unique_elements(xs),
         },
         {'concept': '(lambda (mapi + $0))',
-         'adjust': lambda xs: proportion_unique_elements(xs),
+         'adjust': lambda xs: proportion_unique_elements(xs) - limit(xs, 0, lambda i,o: len(o) == 0)
         },
         {'concept': '(lambda (filter (lambda (> $0 49)) $0))',
-         "adjust": lambda xs: min(1.0, 1.0/(len(xs)-2)*sum((len(o)/len(i) <= 0.75 if len(i) > 0 else 1) for i, o in xs)) + 2.0 * proportion_unique_elements(xs),
+         'adjust': lambda xs: 4 * proportion(xs, lambda i,o: 5 >= len(o) >= 3) + 4 * proportion(xs, lambda i,o: len(i) > 5) + 3/center(xs, lambda i,o: 50 in i) + 3/center(xs, lambda i,o: 49 in i) + proportion_unique_elements(xs),
         },
         {'concept': '(lambda (reverse $0))',
-         'adjust': lambda xs: proportion_unique_elements(xs),
+         'adjust': lambda xs: 2 * proportion(xs, lambda i,o: 7 >= len(i) >= 3) + 2.0 * proportion_unique_elements(xs),
+        },
+    ]
+
+def example_functions():
+    return [
+        {'concept': '(lambda (singleton (count (lambda (== $0 7)) $0)))',
+            'adjust': lambda xs: 3 * all(len(i) >= 5 for i, o in xs) + 2 * proportion_unique_elements(xs) + 3 * proportion_set(xs, lambda i,o: o[0])
+        }
+        ,
+        {'concept': '(lambda (map (lambda (+ 1 $0)) $0))',
+         'adjust': lambda xs: 3 * proportion_set(xs, lambda i,o: len(i)) + 3 * proportion_unique_elements(xs)
+        },
+        {"concept": "(lambda (map sum (filteri (lambda (lambda (is_odd $1))) (zip (if (is_odd (length $0)) $0 (droplast 1 $0)) (if (is_odd (length $0)) (append (drop 1 $0 ) 0) (drop 1 $0))))))",
+         'adjust': lambda xs: 3 * all(len(i) >= 6 and len(i)%2 == 0 for i, o in xs) + 3 * proportion_unique_elements(xs)
+        },
+        {'concept': '(lambda (filter (lambda (> $0 17)) $0))',
+         "adjust": lambda xs: 2 * proportion_unique_elements(xs) + 2 * proportion(xs, lambda i,o: len(i) >= 7) + 2 * proportion(xs, lambda i,o: 5 >= len(i) - len(o) >= 2)
         },
     ]
 
@@ -1457,7 +1481,7 @@ def make_example_set(pool, n):
     return examples
 
 def valid_output(xs, small):
-    return len(xs) == 0 or (len(xs) <= 15 and max(xs) < (10 if small else 100) and min(xs) >= 0)
+    return len(xs) == 0 or (len(xs) <= 10 and max(xs) < (10 if small else 100) and min(xs) >= 0)
 
 def score_set(s, adjust):
     (inputs, outputs) = zip(*s)
@@ -1568,6 +1592,8 @@ def test_p_with_i(e, i):
     return o
 
 def process(dirname, i, c, n_trials=10, n_orders=2, verbose=True, small=False, human=False, kind="greedy"):
+    # set the seed first thing
+    random.seed(i)
     Primitive.GLOBALS.clear()
     grammar = Grammar.uniform(primitives())
     tp = arrow(tlist(tint), tlist(tint))
@@ -1583,7 +1609,7 @@ def process(dirname, i, c, n_trials=10, n_orders=2, verbose=True, small=False, h
     elif kind == "parallel":
         examples = sample_examples_parallel(p, c["adjust"], n=n_trials, n_pools=1000, n_tries=20, n_sets=1000, small=small)
     elif kind == "greedy":
-        examples = sample_examples_greedy_parallel(p, c["adjust"], n=n_trials, n_restarts=1000, n_tries=1000, small=small)
+        examples = sample_examples_greedy_parallel(p, c["adjust"], n=n_trials, n_restarts=2000, n_tries=2000, small=small)
     else:
         examples = sample_examples(p, c["adjust"], n=n_trials, n_pools=1000, n_tries=20, n_sets=1000, verbose=verbose, small=small)
     if n_orders == 0:
@@ -1899,31 +1925,45 @@ def process_hl_data():
 
 if __name__ == "__main__":
 
-    ## Generating new data for BIG-bench
+    ## Generating new I/O pairs
+
+    # for i, c in enumerate(example_functions(), 1):
+    #     if i in [3]:
+    #         process("./tmp",
+    #                 i,
+    #                 c,
+    #                 n_trials=15,
+    #                 n_orders=0,
+    #                 verbose=True,
+    #                 small=False,
+    #                 human=False,
+    #                 kind="greedy",
+    #         )
 
     for i, c in enumerate(model_comparison_wave_3(), 1):
-        process("./tmp",
-                i,
-                c,
-                n_trials=32,
-                n_orders=0,
-                verbose=True,
-                small=(i <= 80 and i != 76),
-                human=False,
-                kind="greedy",
-        )
+        if i in [99]:
+            process("./tmp",
+                    i,
+                    c,
+                    n_trials=11,
+                    n_orders=0,
+                    verbose=True,
+                    small=(i <= 80 and i != 76),
+                    human=False,
+                    kind="greedy",
+            )
 
-    for i, c in enumerate(human_experiments_wave_1(), 101):
-        process("./tmp",
-                i,
-                c,
-                n_trials=32,
-                n_orders=0,
-                verbose=True,
-                small=False,
-                human=False,
-                kind="greedy",
-        )
+    # for i, c in enumerate(human_experiments_wave_1(), 101):
+    #     process("./tmp",
+    #             i,
+    #             c,
+    #             n_trials=10,
+    #             n_orders=0,
+    #             verbose=True,
+    #             small=True,
+    #             human=False,
+    #             kind="greedy",
+    #     )
 
     ## Human Experiment - Wave Pilot
     #
